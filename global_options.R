@@ -1,0 +1,9 @@
+#### LIBRARIES ####
+library(tidyverse)
+library(covidcast)
+library(lubridate)
+library(scales)
+library(zoo)
+library(TTR)
+library(RColorBrewer)
+library(here)

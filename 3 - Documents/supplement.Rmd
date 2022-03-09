@@ -1,0 +1,91 @@
+---
+output:
+  pdf_document:
+    keep_tex: true
+    fig_caption: yes
+header-includes: 
+  - \usepackage[french, USenglish]{babel}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \renewcommand{\sectionmark}[1]{\markright{#1}}
+  - \fancyhf{}
+  - \renewcommand{\headrulewidth}{0pt}
+  - \lhead{{}}
+  - \rhead{{\today}} 
+  - \cfoot{{\thepage}}
+  - \usepackage[T1]{fontenc}
+  - \usepackage{bm}
+  - \usepackage{mathpazo}
+  - \usepackage{tabularx}
+  - \usepackage{titlesec}
+  - \usepackage{graphicx, xcolor}
+  - \usepackage{wrapfig}
+  - \usepackage{amssymb}
+  - \usepackage{amsmath}
+  - \usepackage{lscape}
+  - \usepackage{esint}
+  - \usepackage{paralist}
+  - \usepackage{outlines}
+  - \newcommand{\I}{\textrm{I}}
+  - \newcommand{\N}{\mathcal{N}}
+  - \newcommand{\D}{\textrm{D}}
+  - \newcommand{\E}{\mathbb{E}}
+  - \setlength{\parskip}{1em} %0.5\baselineskip
+  - \setlength{\parindent}{0pt}
+  - \linespread{1.15}
+  - \titleformat*{\section}{\Large\scshape\bfseries}
+  - \titleformat*{\subsection}{\large\scshape\bfseries}
+  - \titleformat*{\subsubsection}{\bfseries}
+  - \titleformat*{\paragraph}{\bfseries}
+  - \titleformat*{\subparagraph}{\bfseries}
+  - \renewcommand{\thesection}{\Roman{section}.} % 1.A. as subsections
+  - \renewcommand{\thesubsection}{\Alph{subsection}.} % 1.A. as subsections
+  - \titlespacing{\section}{0pt}{2pt}{3pt}
+  - \titlespacing{\subsection}{0pt}{2pt}{2pt}
+  - \titlespacing{\subsubsection}{0pt}{0pt}{0pt}
+  - \titlespacing{\paragraph}{0pt}{1pt}{5pt}
+  - \titlespacing{\subparagraph}{10pt}{1pt}{5pt}
+  - \usepackage{hyperref}
+  - \hypersetup{ colorlinks=true, citecolor = blue, linkcolor=blue, urlcolor=blue}
+  - \usepackage[font={footnotesize}]{subcaption}
+  - \usepackage[font={footnotesize}]{caption}
+  - \usepackage{caption, setspace}
+  - \captionsetup{font={stretch=1}}
+  - \captionsetup[figure]{font=footnotesize,labelfont=footnotesize}
+  - \usepackage{tabto}
+  - \def\quoteattr#1#2{\setbox0=\hbox{#2}#1\tabto{\dimexpr\linewidth-\wd0}\box0}
+  - \makeatletter
+  - \newcommand{\pushright}[1]{\ifmeasuring@#1\hfill$\displaystyle#1$\fi\ignorespaces}
+  - \makeatother
+  - \newcommand{\FixMe}[1]{\textcolor{orange}{ [#1]}}
+  - \newcommand{\Comment}[1]{\textcolor{purple}{\textit{[#1]}}}
+  - \newcommand{\Quickwin}{{\color{blue}{$\bigstar$}} }
+  - \renewcommand{\thetable}{S\arabic{table}}
+  - \renewcommand{\thefigure}{S\arabic{figure}}
+  - \usepackage{letltxmacro}
+  - \LetLtxMacro\Oldfootnote\footnote
+  - \newcommand{\EnableFootNotes}{\LetLtxMacro\footnote\Oldfootnote}
+  - \newcommand{\DisableFootNotes}{\renewcommand{\footnote}[2][]{\relax}}
+  - \makeatother
+  - \graphicspath{{../Output/"}}
+
+---
+
+\begin{landscape}
+```{r, echo = F, warning = F, message = F}
+library(here)
+library(kableExtra)
+source(here("1 - Scripts", "1_make_plots.R"))
+
+kbl(d_out[,1:7] %>% mutate_at(4:7, function(a) round(a + .01, 1)), booktabs = TRUE, longtable = TRUE, caption = "Indicators and lagged mortality outcomes by episode.", escape = F) %>%
+  kable_styling(full_width = TRUE, 
+                latex_options = c("hold_position", "repeat_header", "scale_down")) %>%
+  column_spec(1, width = "10em") %>%
+  footnote(number = "Maryland did not report case data from December 5, 2021 through December 19, 2021, and these dates were imputed based on December 4, 2021 in the NYTimes dataset. In lieu of this, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
+          \\\\url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore}.",
+          escape = F,
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE)
+```
+\end{landscape}
+
