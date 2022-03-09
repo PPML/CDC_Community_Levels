@@ -40,11 +40,11 @@ us2 = us %>% group_by(ymd) %>%
          max_omi = cfr == max(cfr, na.rm = T))
 
 # maximum
-us2 %>% filter(max_omi)
+us2 %>% filter(max_omi) %>% mutate(ymd_shift = ymd + 21)
 
 # minimum
-us2 %>% filter(min_omi)
+us2 %>% filter(min_omi) %>% mutate(ymd_shift = ymd + 21)
 
 # current
-us2 %>% filter(ymd=="2022-02-14")
+us2 %>% filter(ymd=="2022-02-14") %>% mutate(ymd_shift = ymd + 21)
 

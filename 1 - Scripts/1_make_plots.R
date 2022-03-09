@@ -86,9 +86,9 @@ us = df %>%
          region = factor(region, levels = c("Northeast", "Midwest", "South", "West")))
 
 # create figure 2
-plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd + 21, y = cfr, group = state)) +
+plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
-  geom_line(data = us, aes(x = ymd + 21, y = cfr_region), col = "#000080") + 
+  geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
   scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -104,7 +104,7 @@ ggsave(here("2 - Figures", "cfr_regional_21.png"), plot = plot2, width = 8, heig
 # create figure s1
 plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd + 21, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
-  geom_line(data = us, aes(x = ymd + 21, y = cfr_region), col = "#000080") + 
+  geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
   scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
