@@ -64,7 +64,7 @@
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
 \lhead{{}}
-\rhead{{\today}}
+\rhead{{}}
 \cfoot{{\thepage}}
 \usepackage[T1]{fontenc}
 \usepackage{bm}
@@ -140,14 +140,12 @@
 
 \begin{document}
 
-\begin{landscape}
-
 \begin{ThreePartTable}
 \begin{TableNotes}[para]
 \item[1] Maryland did not report case data from December 5, 2021 through December 19, 2021, and these dates were imputed based on December 4, 2021 in the NYTimes dataset. In lieu of this, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
           \url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore}.
 \end{TableNotes}
-\begin{longtabu} to \linewidth {>{\raggedright\arraybackslash}p{10em}>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\begin{longtabu} to \linewidth {>{\raggedright\arraybackslash}p{5em}>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
 \caption{\label{tab:unnamed-chunk-1}Indicators and lagged mortality outcomes by episode.}\\
 \toprule
 Start date & State & Duration of 'high' episode (weeks) & Weekly cases per 100K & Weekly hospital admissions & Percentage of inpatient beds occupied by COVID-19 patients & Weekly deaths per 100K 21 days after start\\
@@ -262,6 +260,5 @@ Start date & State & Duration of 'high' episode (weeks) & Weekly cases per 100K 
 2021-12-29 & Wyoming & 8 & 204 & 11.2 & 10.4 & 2.2\\*
 \end{longtabu}
 \end{ThreePartTable}
-\end{landscape}
 
 \end{document}
