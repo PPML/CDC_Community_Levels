@@ -1,7 +1,7 @@
 ---
 output:
   pdf_document:
-    keep_tex: true
+    keep_tex: false
     fig_caption: yes
 header-includes: 
   - \usepackage[french, USenglish]{babel}
@@ -76,14 +76,14 @@ library(here)
 library(kableExtra)
 source(here("1 - Scripts", "1_make_plots.R"))
 
-kbl(d_out[,1:7] %>% mutate_at(4:7, function(a) round(a + .01, 1)), booktabs = TRUE, longtable = TRUE, caption = "Indicators and lagged mortality outcomes by episode.", escape = F) %>%
+kbl(d_out[,1:7] %>% mutate_at(4:7, function(a) round(a + .01, 1)) %>%
+      mutate(State = ifelse(State=="Maryland", paste("Maryland","$^1$",  sep = ""), State)), booktabs = TRUE, longtable = TRUE, caption = "Indicators and lagged mortality outcomes by episode.", escape = F) %>%
   add_header_above(c(" " = 3, "Values at start of episode" = 3)) %>%
   kable_styling(full_width = TRUE, 
                 latex_options = c("hold_position", "repeat_header", "scale_down")) %>%
   column_spec(1, width = "5em") %>%
   #column_spec(6, width = "7em") %>%
-  footnote(number = "Maryland did not report case data from December 5, 2021 through December 19, 2021, and data for these dates were imputed by replicating the December 4 value over the entire missing interval in the New York Times dataset. In lieu of this imputation, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
-          \\\\url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore}.",
+  footnote(number = "Maryland did not report case data from December 5, 2021 through December 19, 2021, and values in the New York Times dataset were filled by repeating the December 4 value over the entire missing interval. For our purposes, we replaced those repeated values in our analytic dataset with backfilled Maryland case data for December 5 to December 19 obtained directly from the Maryland Department of Health, available at \\\\url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore} ('MDCOVID19 CasesPer100KpopulationStatewide').",
           escape = F,
            footnote_as_chunk = TRUE,
            threeparttable = TRUE)

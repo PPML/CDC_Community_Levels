@@ -58,7 +58,7 @@ d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
   filter(trigger_on) %>%
   dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2) %>%
   rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
-         "Weekly hospital admissions" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
+         "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
          "Weekly deaths per 100K 21 days after start" = 7, "Binding indicator" = 8)
 write.csv(d_out, file = here("2 - Figures", "table_s1.csv"))
 
