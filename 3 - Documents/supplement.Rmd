@@ -80,7 +80,7 @@ kbl(d_out[,1:7] %>% mutate_at(4:7, function(a) round(a + .01, 1)), booktabs = TR
   kable_styling(full_width = TRUE, 
                 latex_options = c("hold_position", "repeat_header", "scale_down")) %>%
   column_spec(1, width = "5em") %>%
-  footnote(number = "Maryland did not report case data from December 5, 2021 through December 19, 2021, and these dates were imputed based on December 4, 2021 in the NYTimes dataset. In lieu of this, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
+  footnote(number = "Maryland did not report case data from December 5, 2021 through December 19, 2021, and data for these dates were imputed based on December 4, 2021 in the NYTimes dataset. In lieu of this imputation, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
           \\\\url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore}.",
           escape = F,
            footnote_as_chunk = TRUE,
