@@ -24,14 +24,14 @@ dg = df %>%
                                     max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7)
 
 # create figure 1
-plot1 = ggplot(dg, aes(x = ymd, y = deaths_21_lag_100k*7)) +
+plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dg %>% filter(cdc_flag), 
-            aes(x = ymd, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
+            aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
   facet_wrap(.~state, ncol = 6) + 
   geom_point(data = dg %>% filter(trigger_on), pch = 16, col = "navy",
-             aes(x = ymd, y = deaths_21_lag_100k*7)) + 
-  geom_text(data = dg %>% filter(trigger_on), aes(x = ymd-7, y = deaths_21_lag_100k*7 + 4,
+             aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
+  geom_text(data = dg %>% filter(trigger_on), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
                                                   label = format(ifelse(deaths_21_lag_100k*7 < 10,
                                                                         round(deaths_21_lag_100k*7,1),
                                                                         round(deaths_21_lag_100k*7)), nsmall = 1)),
@@ -86,10 +86,10 @@ us = df %>%
          region = factor(region, levels = c("Northeast", "Midwest", "South", "West")))
 
 # create figure 2
-plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd, y = cfr, group = state)) +
+plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd + 21, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
-  geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
-  scale_x_date(date_breaks = "2 month", date_labels =  "%b %Y") +
+  geom_line(data = us, aes(x = ymd + 21, y = cfr_region), col = "#000080") + 
+  scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_blank(),
@@ -102,10 +102,10 @@ plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ym
 ggsave(here("2 - Figures", "cfr_regional_21.png"), plot = plot2, width = 8, height = 4)
 
 # create figure s1
-plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd, y = cfr, group = state)) +
+plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd + 21, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
-  geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
-  scale_x_date(date_breaks = "2 month", date_labels =  "%b %Y") +
+  geom_line(data = us, aes(x = ymd + 21, y = cfr_region), col = "#000080") + 
+  scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_blank(),
