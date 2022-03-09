@@ -53,12 +53,13 @@ ggsave(here("2 - Figures", "cdc_plot_deaths.png"), plot = plot1, width = 8, heig
 d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     admits_weekly = admits_confirmed_100K*7,
                                     cases_weekly = round(cases_avg_per_100k*7),
-                                    perc_covid_100 = perc_covid*100) %>%
+                                    perc_covid_100 = perc_covid*100,
+                                    trigger = ifelse(check_bound, "Cases", "Hosps")) %>%
   filter(trigger_on) %>%
-  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, max) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2) %>%
   rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
          "Weekly hospital admissions" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
-         "Weekly deaths per 100K 21 days after start" = 7)
+         "Weekly deaths per 100K 21 days after start" = 7, "Binding indicator" = 8)
 write.csv(d_out, file = here("2 - Figures", "table_s1.csv"))
 
 
@@ -86,7 +87,7 @@ us = df %>%
          region = factor(region, levels = c("Northeast", "Midwest", "South", "West")))
 
 # create figure 2
-plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd, y = cfr, group = state)) +
+plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Tuesday"), aes(x = ymd, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
   geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
   scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
@@ -102,7 +103,7 @@ plot2 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ym
 ggsave(here("2 - Figures", "cfr_regional_21.png"), plot = plot2, width = 8, height = 4)
 
 # create figure s1
-plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Monday"), aes(x = ymd + 21, y = cfr, group = state)) +
+plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Tuesday"), aes(x = ymd + 21, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
   geom_line(data = us, aes(x = ymd, y = cfr_region), col = "#000080") + 
   scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +

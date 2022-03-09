@@ -142,17 +142,21 @@
 
 \begin{ThreePartTable}
 \begin{TableNotes}[para]
-\item[1] Maryland did not report case data from December 5, 2021 through December 19, 2021, and data for these dates were imputed based on December 4, 2021 in the NYTimes dataset. In lieu of this imputation, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
+\item[1] Maryland did not report case data from December 5, 2021 through December 19, 2021, and data for these dates were imputed by replicating the December 4 value over the entire missing interval in the New York Times dataset. In lieu of this imputation, we manually backfilled data for this time period from the state dataset 'MDCOVID19 CasesPer100KpopulationStatewide', available at 
           \url{https://coronavirus.maryland.gov/datasets/mdcovid19-casesper100kpopulationstatewide/explore}.
 \end{TableNotes}
 \begin{longtabu} to \linewidth {>{\raggedright\arraybackslash}p{5em}>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
 \caption{\label{tab:unnamed-chunk-1}Indicators and lagged mortality outcomes by episode.}\\
 \toprule
+\multicolumn{3}{c}{ } & \multicolumn{3}{c}{Values at start of episode} \\
+\cmidrule(l{3pt}r{3pt}){4-6}
 Start date & State & Duration of 'high' episode (weeks) & Weekly cases per 100K & Weekly hospital admissions & Percentage of inpatient beds occupied by COVID-19 patients & Weekly deaths per 100K 21 days after start\\
 \midrule
 \endfirsthead
 \caption[]{Indicators and lagged mortality outcomes by episode. \textit{(continued)}}\\
 \toprule
+\multicolumn{3}{c}{ } & \multicolumn{3}{c}{Values at start of episode} \\
+\cmidrule(l{3pt}r{3pt}){4-6}
 Start date & State & Duration of 'high' episode (weeks) & Weekly cases per 100K & Weekly hospital admissions & Percentage of inpatient beds occupied by COVID-19 patients & Weekly deaths per 100K 21 days after start\\
 \midrule
 \endhead

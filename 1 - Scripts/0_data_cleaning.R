@@ -111,6 +111,16 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   # day of the week
   dotw = weekdays(ymd),
   
+  # indicators yesterday
+  cases_yesterday = lag(cases_avg_per_100k, 8),
+  admits_yesterday = lag(admits_confirmed_100K, 8),
+  perc_yesterday = lag(perc_covid, 8),
+  
+  check_bound = (cases_yesterday<200/7 & cases_avg_per_100k>=200/7 & 
+                   (admits_yesterday>=10/7 | perc_yesterday>=.1)),
+  
+  check_bound2 = (cases_yesterday<200/7 & cases_avg_per_100k>=200/7),
+  
   # check completeness
   chk = paste(ymd, state))
 
