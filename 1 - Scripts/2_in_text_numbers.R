@@ -46,5 +46,5 @@ us2 %>% filter(max_omi) %>% mutate(ymd_shift = ymd + 21)
 us2 %>% filter(min_omi) %>% mutate(ymd_shift = ymd + 21)
 
 # current
-us2 %>% filter(ymd=="2022-02-15") %>% mutate(ymd_shift = ymd + 21)
+us2 %>% filter(ymd=="2022-02-18") %>% mutate(ymd_shift = ymd + 21)
 

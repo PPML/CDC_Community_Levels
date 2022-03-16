@@ -39,3 +39,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Big file
+combined_data_county.csv
+hosps_county.csv

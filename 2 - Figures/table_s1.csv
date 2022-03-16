@@ -1,6 +1,6 @@
 "","Start date","State","Duration of 'high' episode (weeks)","Weekly cases per 100K","Weekly hospital admissions per 100K","Percentage of inpatient beds occupied by COVID-19 patients","Weekly deaths per 100K 21 days after start","Binding indicator","max","check_bound","check_bound2"
 "1",2021-07-28,"Alabama",10,276,30.8370987429599,8.95606263967347,3.71,"Cases",17.99,TRUE,TRUE
-"2",2021-12-29,"Alabama",8,392,14.4599887624065,6.51148466009233,2.38,"Hosps",6.72,FALSE,TRUE
+"2",2021-12-29,"Alabama",8,392,14.4599887624065,6.51148466009233,2.38,"Hosps",7.35,FALSE,TRUE
 "3",2021-07-28,"Alaska",18,209,12.8495171178806,9.23305647034201,1.47,"Hosps",12.6,FALSE,TRUE
 "4",2022-01-12,"Alaska",6,1382,15.5834569301957,7.57215756398029,1.47,"Hosps",3.71,FALSE,FALSE
 "5",2021-08-11,"Arizona",29,236,16.9947533335889,12.649567175265,2.94,"Cases",8.96,TRUE,TRUE
