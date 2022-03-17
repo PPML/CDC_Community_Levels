@@ -26,7 +26,8 @@ dg = df %>%
                              epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
   # calculate episode duration
   group_by(fips, epoch) %>% mutate(last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
-                                    max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7)
+                                   max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7,
+                                   label = paste(CTYNAME, ", ", ABBR, sep = ""))
 
 # Table S1
 # pull CDC indicators and lagged 21 day outcomes
@@ -36,7 +37,7 @@ d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     perc_covid_100 = perc_covid*100,
                                     trigger = ifelse(check_bound, "Cases", "Hosps")) %>%
   filter(trigger_on) %>%
-  dplyr::select(ymd, fips, state, time, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2)
+  dplyr::select(ymd, fips, state, time, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, label)
 
 # mortality 21-days later
 d_out %>% summarize(mean = mean(deaths_weekly, na.rm = T),
@@ -56,13 +57,19 @@ d_out %>% mutate(epoch = ifelse(ymd>="2021-11-01", "Omicron", "Delta")) %>%
                                 )
 
 # make plot
-ranks = sort(unique(dg$county_rank))[1:50]
-dh = dg %>% filter(county_rank %in% ranks)
+dg = dg %>% arrange(county_rank)
+ranks = sort(unique(dg$county_rank))[1:54]
+counties = unique(dg$label[dg$county_rank%in%ranks])
+
+dh = dg %>% filter(county_rank %in% ranks) %>%
+  arrange(POPESTIMATE2019) %>%
+  mutate(label = factor(label, counties))
+
 plot1 = ggplot(dh, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dh %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
-  facet_wrap(.~CTYNAME, ncol = 6) + 
+  facet_wrap(.~label, ncol = 6) + 
   geom_point(data = dh %>% filter(trigger_on), pch = 16, col = "navy",
              aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
   geom_text(data = dh %>% filter(trigger_on), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
@@ -82,7 +89,8 @@ plot1 = ggplot(dh, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_hline(yintercept = 0.9, lty = 3) 
 plot1
 
-ggsave(here("2 - Figures", "cdc_plot_deaths_county.png"), plot = plot1, width = 8, height = 11)
+
+ggsave(here("2 - Figures", "cdc_plot_deaths_county.png"), plot = plot1, width = 10, height = 11)
 
 
 
