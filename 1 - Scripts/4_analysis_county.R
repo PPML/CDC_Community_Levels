@@ -93,4 +93,16 @@ plot1
 ggsave(here("2 - Figures", "cdc_plot_deaths_county.png"), plot = plot1, width = 10, height = 11)
 
 
+roc_plot =  df %>% 
+  # start in June
+  filter(date >= "2021-06-01") %>% 
+  # keep Wednesdays (when CDC updates criteria)
+  filter(dotw == "Friday") %>% gather(var, value, cdc_flag_100_low, cdc_flag_200_low, cdc_flag_500_low,
+                                      cdc_flag_1000_low,
+                         cdc_flag_100_high, cdc_flag_200_high, cdc_flag_500_high, cdc_flag_1000_high) %>%
+  group_by(var, value) %>% filter(!is.na(value)) %>% mutate(mean_val = mean(deaths_21_lag_100k, na.rm = T))
 
+ggplot(roc_plot, 
+       aes(x = deaths_21_lag_100k, group = value, fill = value, col = value)) + 
+  geom_density(alpha = .5) + facet_wrap(.~var, ncol = 2) + xlim(0, 3) + ylim(0,2) + 
+  geom_vline(aes(xintercept = mean_val, col = value))

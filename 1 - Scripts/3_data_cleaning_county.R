@@ -106,6 +106,17 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
   cdc_flag_2 = (cases_avg_per_100k < 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)), # under 200/100K 7-d
   cdc_flag = cdc_flag_1 | cdc_flag_2,
   
+  cdc_flag_100_low = (cases_avg_per_100k > 100/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_200_low = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_500_low = (cases_avg_per_100k > 500/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_1000_low = (cases_avg_per_100k > 1000/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  
+  cdc_flag_100_high = (cases_avg_per_100k > 100/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_200_high = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_500_high = (cases_avg_per_100k > 500/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_1000_high = (cases_avg_per_100k > 1000/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  
+  
   cdc_flag_inc_susp = (cases_avg_per_100k > 200/7 & (admits_100K > 10/7 | perc_covid > .1)) |
     (cases_avg_per_100k < 200/7 & (admits_100K > 20/7 | perc_covid > .15)),
 
