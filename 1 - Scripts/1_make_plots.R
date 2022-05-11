@@ -14,7 +14,8 @@ dg = df %>%
   # keep Wednesdays (when CDC updates criteria)
   filter(dotw == "Wednesday") %>%
   # define episode start (must last at least 2 weeks)
-  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1)) %>%
+  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
+         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1)) %>%
   # define variables for plotting episodes
   group_by(state) %>% mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
                              n = n(),
@@ -54,9 +55,9 @@ plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(data = dg %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
   facet_wrap(.~state, ncol = 8) + 
-  geom_point(data = dg %>% filter(trigger_on), pch = 16, col = "navy",
+  geom_point(data = dg %>% filter(trigger_on | trigger_off), pch = 16, col = "navy",
              aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
-  geom_text(data = dg %>% filter(trigger_on), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
+  geom_text(data = dg %>% filter(trigger_on | trigger_off), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
                                                   label = format(ifelse(deaths_21_lag_100k*7 < 10,
                                                                         round(deaths_21_lag_100k*7,1),
                                                                         round(deaths_21_lag_100k*7)), nsmall = 1)),
@@ -79,9 +80,10 @@ d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     admits_weekly = admits_confirmed_100K*7,
                                     cases_weekly = round(cases_avg_per_100k*7),
                                     perc_covid_100 = perc_covid*100,
-                                    trigger = ifelse(check_bound, "Cases", "Hosps")) %>%
-  filter(trigger_on) %>%
-  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2) %>%
+                                    trigger = ifelse(check_bound, "Cases", "Hosps"),
+                                    type = ifelse(trigger_on, "Start", "End")) %>%
+  filter(trigger_on | trigger_off) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, type) %>%
   rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
          "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
          "Weekly deaths per 100K 21 days after start" = 7, "Binding indicator" = 8)
@@ -119,9 +121,9 @@ us = df %>%
          region = factor(region, levels = c("Northeast", "Midwest", "South", "West")))
 
 # create figure 2
-plot2 = ggplot(us %>% filter(ymd <= "2022-03-01" & dotw == "Tuesday"), aes(x = ymd, y = cfr, group = state)) +
+plot2 = ggplot(us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = cfr, group = state)) +
   geom_line(alpha = .15) + facet_grid(.~region) + 
-  geom_line(data = us %>% filter(ymd <= "2022-03-01" & dotw == "Tuesday"), aes(x = ymd, y = cfr_region), col = "#000080") + 
+  geom_line(data = us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = cfr_region), col = "#000080") + 
   scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),

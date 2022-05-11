@@ -19,7 +19,8 @@ dg = df %>%
   arrange(fips, date) %>%
   
   # define episode start (must last at least 2 weeks)
-  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1)) %>%
+  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
+         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1)) %>%
   # define variables for plotting episodes
   group_by(fips) %>% mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
                              n = n(),
@@ -35,18 +36,19 @@ d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     admits_weekly = admits_confirmed_100K*7,
                                     cases_weekly = round(cases_avg_per_100k*7),
                                     perc_covid_100 = perc_covid*100,
-                                    trigger = ifelse(check_bound, "Cases", "Hosps")) %>%
-  filter(trigger_on) %>%
-  dplyr::select(ymd, fips, state, time, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, label)
+                                    trigger = ifelse(check_bound, "Cases", "Hosps"),
+                                    type = ifelse(trigger_on, "Start", "End")) %>%
+  filter(trigger_on | trigger_off) %>%
+  dplyr::select(ymd, fips, state, time, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, label, type)
 
 # mortality 21-days later
-d_out %>% summarize(mean = mean(deaths_weekly, na.rm = T),
+d_out %>% group_by(type) %>% summarize(mean = mean(deaths_weekly, na.rm = T),
                     median = median(deaths_weekly, na.rm = T),
                     chk = sum(is.na(deaths_weekly)))
 
 # mortality 21-days later by epoch
 d_out %>% mutate(epoch = ifelse(ymd>="2021-11-01", "Omicron", "Delta")) %>%
-  group_by(epoch) %>% summarize(n = n(),
+  group_by(epoch, type) %>% summarize(n = n(),
                                 mean = mean(deaths_weekly, na.rm = T),
                                 weighted.mean = weighted.mean(deaths_weekly, na.rm = T, w = POPESTIMATE2019),
                                 median = median(deaths_weekly, na.rm = T),

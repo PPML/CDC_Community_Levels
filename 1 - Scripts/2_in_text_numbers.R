@@ -9,8 +9,9 @@ source(here("1 - Scripts", "1_make_plots.R"))
 dim(d_out)
 
 # mortality 21-days later
-d_out %>% summarize(mean = mean(`Weekly deaths per 100K 21 days after start`),
-                    median = median(`Weekly deaths per 100K 21 days after start`),
+d_out %>% group_by(type) %>% 
+  summarize(mean = mean(`Weekly deaths per 100K 21 days after start`, na.rm = T),
+                    median = median(`Weekly deaths per 100K 21 days after start`, na.rm = T),
                     q25 = quantile(`Weekly deaths per 100K 21 days after start`, .25),
                     q75 = quantile(`Weekly deaths per 100K 21 days after start`, .75),
                     gt_0.9 = sum(`Weekly deaths per 100K 21 days after start`>.9),
@@ -21,7 +22,7 @@ d_out %>% summarize(mean = mean(`Weekly deaths per 100K 21 days after start`),
 
 # mortality 21-days later by epoch
 d_out %>% mutate(epoch = ifelse(`Start date`>="2021-11-01", "Omicron", "Delta")) %>%
-  group_by(epoch) %>% summarize(n = n(),
+  group_by(epoch, type) %>% summarize(n = n(),
                     mean = mean(`Weekly deaths per 100K 21 days after start`),
                     median = median(`Weekly deaths per 100K 21 days after start`),
                     q25 = quantile(`Weekly deaths per 100K 21 days after start`, .25),
@@ -31,7 +32,7 @@ d_out %>% mutate(epoch = ifelse(`Start date`>="2021-11-01", "Omicron", "Delta"))
 # case fatality
 # aggregate over US
 us2 = us %>% group_by(ymd) %>% 
-  filter(ymd>="2021-06-01") %>%
+  filter(ymd>="2021-05-15") %>%
   summarize(
   num = sum(deaths_lag.21), denom = sum(cases_avg),
   admits = sum(admits_lag.21),
@@ -43,7 +44,10 @@ us2 = us %>% group_by(ymd) %>%
   hosp_case = sum(admits_lag.21)/sum(cases_avg),
   hosp_case1 = sum(admits_lag.14)/sum(cases_avg)) %>% ungroup() %>%
   mutate(min_omi = cfr == min(cfr, na.rm = T),
-         max_omi = cfr == max(cfr, na.rm = T))
+         max_omi = cfr == max(cfr, na.rm = T)) %>%
+  mutate(hfr.14 = lag(hfr.14, 7)) %>%
+  filter(ymd>="2021-06-01")
+  
 
 # maximum
 us2 %>% filter(max_omi) %>% mutate(ymd_shift = ymd + 21)
@@ -54,6 +58,8 @@ us2 %>% filter(min_omi) %>% mutate(ymd_shift = ymd + 21)
 # current
 us2 %>% filter(ymd=="2022-03-15") %>% mutate(ymd_shift = ymd + 21)
 
+
+#### MORE NATIONAL PLOTS ####
 ggplot(us2, aes(x = ymd, y = cfr)) + geom_line() +
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +
   scale_y_continuous(breaks = c(0,.5, 1,2,3), limits = c(0, 3)) +
@@ -92,7 +98,7 @@ ggsave(here("2 - Figures", "cfr_national_lags.png"), plot = last_plot(), width =
 ggplot(us2 %>% gather(var, value, hfr.21, hfr.14) %>% 
          mutate(lab = ifelse(var=="hfr.21", "21-day lag", "14-day lag")),
        aes(x = ymd, y = value, group = lab, col = lab)) + geom_line() +
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") + ylim(0, 25) +
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") + ylim(0, 40) +
   #scale_y_continuous(breaks = c(0,.5, 1,2,3)) +
   scale_color_brewer(name = "", palette = "Set1") +
   theme_minimal() + 
@@ -101,7 +107,10 @@ ggplot(us2 %>% gather(var, value, hfr.21, hfr.14) %>%
         axis.text.x=element_text(size = 7, angle=60, hjust=1),
         strip.text=element_text(size = 10),
         plot.title = element_text(face = "bold")) +
-  labs(x = "", y = "", title = "Lagged COVID-19 hospital admission-fatality ratio (%)") 
+  labs(x = "", y = "", title = "Lagged COVID-19 hospital admission-fatality ratio (%)") +
+  geom_hline(yintercept = 10, lty = 3) + 
+  geom_hline(yintercept = 20, lty = 3) +
+  geom_hline(yintercept = 30, lty = 3)
 ggsave(here("2 - Figures", "hfr_national_lags.png"), plot = last_plot(), width = 6, height = 4)
 
 ggplot(us2, aes(x = ymd, y = hosp_case)) + geom_line() +

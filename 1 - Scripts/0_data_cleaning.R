@@ -85,7 +85,7 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   cdc_flag_2 = (cases_avg_per_100k < 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)), # under 200/100K 7-d
   cdc_flag = cdc_flag_1 | cdc_flag_2,
   cdc_flag_alt = (admits_confirmed_100K > 5/7 | perc_covid > .05),
-  cdc_flag = cdc_flag_alt,
+  #cdc_flag = cdc_flag_alt,
   
   cdc_flag_inc_susp = (cases_avg_per_100k > 200/7 & (admits_100K > 10/7 | perc_covid > .1)) |
     (cases_avg_per_100k < 200/7 & (admits_100K > 20/7 | perc_covid > .15)),
@@ -138,7 +138,4 @@ k[k > 1]
 #### save
 write.csv(df, here("0 - Data", "combined_data.csv"))
 save(df, file = here("0 - Data", "combined_data.RData"))
-
-
-
 
