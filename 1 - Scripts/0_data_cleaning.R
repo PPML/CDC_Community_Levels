@@ -21,6 +21,7 @@ h = read.csv(here("0 - Data", "hosps.csv")) %>% group_by(state) %>%
          admits_avg = rollmean(admits, k = 7, align = "right", na.pad = TRUE, na.rm = T),
          admits_confirmed_avg = rollmean(admits_confirmed, k = 7, align = "right", na.pad = TRUE, na.rm = T),
          admits_suspected_avg = rollmean(admits_suspected, k = 7, align = "right", na.pad = TRUE, na.rm = T),
+         hosped_avg = rollmean(total_adult_patients_hospitalized_confirmed_covid + total_pediatric_patients_hospitalized_confirmed_covid, k = 7, align = "right", na.pad = T, na.rm = T),
          perc_covid = rollmean(percent_of_inpatients_with_covid, k = 7, align = "right", na.pad = TRUE, na.rm = T))
 
 #### ANOMALOUS MD DATA ####
@@ -61,7 +62,7 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   
   # join to hospital data
   left_join(h %>% dplyr::select(date, state, admits_avg,
-                                admits_confirmed_avg, admits_suspected_avg, perc_covid), 
+                                admits_confirmed_avg, admits_suspected_avg, perc_covid, hosped_avg), 
             c("ABBR"="state", "ymd"="date")) %>%
   mutate(admits_confirmed_100K = admits_confirmed_avg/POPESTIMATE2019*100000,
          admits_100K = admits_avg/POPESTIMATE2019*100000) %>%
@@ -83,6 +84,8 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   cdc_flag_1 = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
   cdc_flag_2 = (cases_avg_per_100k < 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)), # under 200/100K 7-d
   cdc_flag = cdc_flag_1 | cdc_flag_2,
+  cdc_flag_alt = (admits_confirmed_100K > 5/7 | perc_covid > .05),
+  cdc_flag = cdc_flag_alt,
   
   cdc_flag_inc_susp = (cases_avg_per_100k > 200/7 & (admits_100K > 10/7 | perc_covid > .1)) |
     (cases_avg_per_100k < 200/7 & (admits_100K > 20/7 | perc_covid > .15)),
@@ -108,6 +111,9 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   deaths_25_lag_100k = lead(deaths_avg_per_100k, 25), 
   deaths_26_lag_100k = lead(deaths_avg_per_100k, 26),
   
+  # lagged hosps per 100K
+  admits_7_lag = lead(admits_confirmed_avg, 7),
+
   # day of the week
   dotw = weekdays(ymd),
   

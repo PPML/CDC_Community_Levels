@@ -10,10 +10,16 @@ library(here)
 
 #### STATE POPULATION DATA ####
 data(county_census)
+data(state_census)
+s = state_census %>% dplyr::select(NAME, ABBR)
 
 #### HOSPITALIZATIONS ####
 h = read.csv(here("0 - Data", "hosps_county.csv")) %>% 
   mutate(date = as.Date(collection_week, format = "%Y/%m/%d"),
+         
+         # rename for NYC
+         fips_code = ifelse(fips_code %in% c(36005, 36047, 36061, 36081, 36085),
+                            36998, fips_code),
          previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_adult_covid_confirmed_7_day_sum),
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
@@ -40,7 +46,14 @@ ggplot(chk, aes(x = date, y = perc_covid)) + geom_line()
 
 
 # county census
-county_census = county_census %>% mutate(fips = as.numeric(FIPS))
+county_census = county_census %>% 
+  mutate(fips = as.numeric(FIPS),
+         # rename for NYC
+         fips = ifelse(fips %in% c(36005, 36047, 36061, 36081, 36085),
+                                                            36998, fips)) %>%
+  group_by(fips, STNAME) %>% summarize(POPESTIMATE2019 = sum(POPESTIMATE2019),
+                                        CTYNAME = CTYNAME[1]) %>%
+  mutate(CTYNAME = ifelse(fips==36998, "New York City", CTYNAME))
 
 k = table(county_census$fips)
 k[k > 1]
@@ -50,10 +63,12 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
   bind_rows(read.csv(here("0 - Data", "us-counties-2022.csv"))) %>%
   mutate(fips = as.numeric(sub("USA-", "", geoid))) %>%
   
-  # join to state data
+  # join to county data
   left_join(county_census, c("fips"="fips")) %>%
   filter(!is.na(POPESTIMATE2019)) %>%
   
+  # join to state data
+  left_join(s, c("state"="NAME")) %>%
   # group by state
   group_by(fips) %>% 
   
@@ -90,6 +105,17 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
   cdc_flag_1 = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
   cdc_flag_2 = (cases_avg_per_100k < 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)), # under 200/100K 7-d
   cdc_flag = cdc_flag_1 | cdc_flag_2,
+  
+  cdc_flag_100_low = (cases_avg_per_100k > 100/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_200_low = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_500_low = (cases_avg_per_100k > 500/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  cdc_flag_1000_low = (cases_avg_per_100k > 1000/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
+  
+  cdc_flag_100_high = (cases_avg_per_100k > 100/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_200_high = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_500_high = (cases_avg_per_100k > 500/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  cdc_flag_1000_high = (cases_avg_per_100k > 1000/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
+  
   
   cdc_flag_inc_susp = (cases_avg_per_100k > 200/7 & (admits_100K > 10/7 | perc_covid > .1)) |
     (cases_avg_per_100k < 200/7 & (admits_100K > 20/7 | perc_covid > .15)),
