@@ -9,26 +9,40 @@ load(here("0 - Data", "combined_data_county.RData"))
 
 # Figure 1 
 dg = df %>% 
-  # start in June
-  filter(date >= "2021-06-01") %>% 
   # keep Wednesdays (when CDC updates criteria)
   filter(dotw == "Friday") %>%
-  
+  filter(date >= "2021-01-01") 
+
+dg = dg %>%
   # set up order
   group_by(fips) %>%
   arrange(fips, date) %>%
   
   # define episode start (must last at least 2 weeks)
   mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
-         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1)) %>%
+         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1),
+         lag = lag(cdc_flag,1),
+         lead = lead(cdc_flag,1)) %>%
   # define variables for plotting episodes
-  group_by(fips) %>% mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
-                             n = n(),
-                             epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
+  group_by(fips) %>% 
+  #mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
+  #n = n(), epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
   # calculate episode duration
-  group_by(fips, epoch) %>% mutate(last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
-                                   max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7,
-                                   label = paste(CTYNAME, ", ", ABBR, sep = ""))
+  #group_by(fips, epoch) %>% 
+  mutate(#last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
+                                   #max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7,
+                                   label = paste(CTYNAME, ", ", ABBR, sep = "")) #%>%
+  # start in June
+  #filter(date >= "2021-06-01") 
+
+num_ep = dg %>% filter(trigger_on | trigger_off) %>% group_by(label) %>% arrange(date) %>%
+  mutate(ep = sapply(1:n(), function(a) sum(trigger_on[1:a]))) %>%
+  group_by(label, ep) %>% mutate(on_date = ifelse(sum(trigger_on>0), date[trigger_on], "2021-01-01")) %>%
+  filter(on_date>="2021-06-01") %>% filter(date <= "2022-05-01")
+
+table(num_ep$trigger_on)
+table(num_ep$trigger_off)
+table(num_ep$date, num_ep$trigger_off)
 
 # Table S1
 # pull CDC indicators and lagged 21 day outcomes

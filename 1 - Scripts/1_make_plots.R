@@ -10,9 +10,10 @@ load(here("0 - Data", "combined_data.RData"))
 # Figure 1 
 dg = df %>% 
   # start in June
-  filter(date >= "2021-06-01") %>% 
+  filter(date >= "2021-01-01") %>% 
   # keep Wednesdays (when CDC updates criteria)
   filter(dotw == "Wednesday") %>%
+  group_by(state) %>% arrange(date) %>%
   # define episode start (must last at least 2 weeks)
   mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
          trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1)) %>%
@@ -23,6 +24,15 @@ dg = df %>%
   # calculate episode duration
   group_by(state, epoch) %>% mutate(last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
                                     max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7)
+
+# subsets
+num_ep = dg %>% filter(trigger_on | trigger_off) %>% group_by(state) %>% arrange(date) %>%
+  mutate(ep = sapply(1:n(), function(a) sum(trigger_on[1:a]))) %>%
+  group_by(state, ep) %>% mutate(on_date = ifelse(sum(trigger_on>0), date[trigger_on], "2021-01-01")) %>%
+  filter(on_date>="2021-06-01")
+
+table(num_ep$trigger_on)
+table(num_ep$trigger_off)
 
 # create figure 1
 plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
@@ -96,12 +106,18 @@ us = df %>%
   filter(ymd >= "2021-06-01") %>% 
   # calculate state CFR
   group_by(ymd, state, dotw, REGION) %>% 
-  summarize(deaths_lag.21 = sum(deaths_21_lag),
+  summarize(#deaths_deconvolved1 = sum(deaths_deconvolved1),
+            #deaths_deconvolved2 = sum(deaths_deconvolved2),
+            cases_deconvolved1 = sum(cases_deconvolved1),
+            cases_deconvolved2 = sum(cases_deconvolved2),
+            deaths_lag.21 = sum(deaths_21_lag),
             deaths_lag.17 = sum(deaths_17_lag),
             admits_lag.14 = sum(admits_7_lag),
             admits_lag.21 = sum(admits_confirmed_avg),
             hosped_avg = sum(hosped_avg),
+            hosp_case = sum(admits_confirmed_avg)/sum(cases_avg),
             cases_avg = sum(cases_avg),
+            deaths_avg = sum(deaths_avg),
             cfr = deaths_lag.21/cases_avg*100,
             cfr.17 = deaths_lag.17/cases_avg*100) %>% 
   # report 1x/week to reduce noise
@@ -135,6 +151,23 @@ plot2 = ggplot(us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = cfr, group = s
   labs(x = "", y = "21-day lagged CFR (%)", title = "") +
   ylim(0, 4) 
 ggsave(here("2 - Figures", "cfr_regional_21.png"), plot = plot2, width = 8, height = 4)
+
+plot2a = ggplot(us %>% 
+                  gather(var, value, hosp_case_reg, cfr_region)%>%
+                  group_by(var) %>% mutate(value2 = scale(value)), 
+                aes(x = ymd, y = value2, group = var, col = var)) +
+  facet_grid(.~region, scales = "free") + 
+  geom_line() + 
+  #geom_line(data = us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = hosp_case), col = "#000080") + 
+  scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
+  theme_minimal() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_blank(),
+        axis.text.x=element_text(size = 7, angle=60, hjust=1),
+        strip.text=element_text(size = 10),
+        plot.title = element_text(face = "bold")) + 
+  labs(x = "", y = "Scaled outcomes", title = "")
+plot2a
 
 # create figure s1
 plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Tuesday"), aes(x = ymd, y = cfr, group = state)) +

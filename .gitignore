@@ -40,6 +40,10 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# Big file
+# Big files
 combined_data_county.csv
 hosps_county.csv
+7_predictive_models.R
+cdc-alternative-maps-debug2.R
+
+

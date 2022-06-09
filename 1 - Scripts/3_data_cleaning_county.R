@@ -34,8 +34,10 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
   mutate(admits = admits_confirmed + admits_suspected,
          admits_avg = admits/7,
          admits_confirmed_avg = admits_confirmed/7,
+         admits_confirmed_avg = ifelse(is.na(admits_confirmed_avg), 0, admits_confirmed_avg),
          admits_suspected_avg = admits_suspected/7,
-         perc_covid = inpt_beds_covid/7/inpt_beds)
+         perc_covid = inpt_beds_covid/7/inpt_beds,
+         perc_covid = ifelse(perc_covid=="Inf", 0, perc_covid))
 
 k = table(paste(h$fips_code, h$date))
 k[k > 1]
