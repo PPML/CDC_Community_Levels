@@ -16,14 +16,17 @@ dg = df %>%
   group_by(state) %>% arrange(date) %>%
   # define episode start (must last at least 2 weeks)
   mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
-         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1)) %>%
+         trigger_off = cdc_flag & !lead(cdc_flag,1) & !lead(cdc_flag,2),
+         trigger_on2 = cdc_flag & !lag(cdc_flag,1),
+         trigger_off2 = cdc_flag & !lead(cdc_flag,1)) %>%
   # define variables for plotting episodes
   group_by(state) %>% mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
                              n = n(),
                              epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
   # calculate episode duration
   group_by(state, epoch) %>% mutate(last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
-                                    max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7)
+                                    max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7) %>%
+  filter(ymd >= "2021-06-01" & ymd <= "2022-05-15")
 
 # subsets
 num_ep = dg %>% filter(trigger_on | trigger_off) %>% group_by(state) %>% arrange(date) %>%
@@ -64,10 +67,10 @@ plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dg %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
-  facet_wrap(.~state, ncol = 8) + 
+  facet_wrap(.~state, ncol = 6) + 
   geom_point(data = dg %>% filter(trigger_on | trigger_off), pch = 16, col = "navy",
              aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
-  geom_text(data = dg %>% filter(trigger_on | trigger_off), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
+  geom_text(data = dg %>% filter(trigger_on | trigger_off), aes(x = as.Date(ifelse(trigger_on, ymd-7 + 21, ymd-7 + 21)), y = deaths_21_lag_100k*7 + 4,
                                                   label = format(ifelse(deaths_21_lag_100k*7 < 10,
                                                                         round(deaths_21_lag_100k*7,1),
                                                                         round(deaths_21_lag_100k*7)), nsmall = 1)),
@@ -82,7 +85,35 @@ plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
         strip.text=element_text(size = 9, vjust = -1.3)) + 
   labs(x = "", y = "Average weekly deaths per 100K population") + 
   geom_hline(yintercept = 0.9, lty = 3) 
-ggsave(here("2 - Figures", "cdc_plot_deaths2.png"), plot = plot1, width = 11, height = 8)
+ggsave(here("2 - Figures", "cdc_plot_deaths2.png"), plot = plot1, width = 8, height = 11)
+
+
+# create figure 1
+plot1c = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
+  geom_line(col = "grey", lwd = .3) + 
+  geom_line(data = dg %>% filter(cdc_flag), 
+            aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
+  facet_wrap(.~state, ncol = 6) + 
+  geom_point(data = dg %>% filter(trigger_on2), col = "navy",
+             aes(x = ymd + 21, y = deaths_21_lag_100k*7), pch = 16, size = 1) + 
+  geom_point(data = dg %>% filter(trigger_off2), col = "navy",
+             aes(x = ymd + 21, y = deaths_21_lag_100k*7), pch = 1, size = 1) + 
+  #geom_text(data = dg %>% filter(trigger_on2 | trigger_off2), aes(x = as.Date(ifelse(trigger_on2, ymd-7 + 21, ymd-7 + 21)), y = deaths_21_lag_100k*7 + 4,
+  #                                                              label = format(ifelse(deaths_21_lag_100k*7 < 10,
+  #                                                                                    round(deaths_21_lag_100k*7,1),
+  #                                                                                    round(deaths_21_lag_100k*7)), nsmall = 1)),
+  #          size = 2) + 
+  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +
+  scale_color_brewer(guide = "none", name = "", palette = "Set1") + 
+  theme_minimal() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x=element_text(size = 7, angle=60, hjust=1),
+        strip.text=element_text(size = 9, vjust = -1.3)) + 
+  labs(x = "", y = "Average weekly deaths per 100K population") + 
+  geom_hline(yintercept = 0.9, lty = 3) 
+ggsave(here("2 - Figures", "cdc_plot_deaths3.png"), plot = plot1c, width = 8, height = 11)
 
 # Table S1
 # pull CDC indicators and lagged 21 day outcomes

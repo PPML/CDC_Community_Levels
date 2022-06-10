@@ -132,7 +132,7 @@ ggplot(us2 %>% gather(var, value, cfr.lag, cfr.dec3, cfr.dec4) %>%
 ggsave(here("2 - Figures", "cfr_national_lags.png"), plot = last_plot(), width = 6, height = 4)
 
 
-ggplot(us2 %>% gather(var, value, cfr, hosp_case) %>% group_by(var) %>%
+ggplot(us2 %>% gather(var, value, cfr, hosp_case, hfr.14) %>% group_by(var) %>%
          mutate(value2 = scale(value)), 
        aes(x = ymd, y = value2, group = var, col = var)) + geom_line() +
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +

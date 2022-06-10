@@ -19,21 +19,23 @@ dg = dg %>%
   arrange(fips, date) %>%
   
   # define episode start (must last at least 2 weeks)
-  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
-         trigger_off = cdc_flag & lag(cdc_flag,1) & !lead(cdc_flag,1),
+  mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & !lag(cdc_flag,2) & lead(cdc_flag,1),
+         trigger_off = cdc_flag & lag(cdc_flag, 1) & !lead(cdc_flag,1) & !lead(cdc_flag,2),
+         trigger_on2 = cdc_flag & !lag(cdc_flag,1),
+         trigger_off2 = cdc_flag & !lead(cdc_flag,1),
          lag = lag(cdc_flag,1),
          lead = lead(cdc_flag,1)) %>%
   # define variables for plotting episodes
   group_by(fips) %>% 
-  #mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
-  #n = n(), epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
+  mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
+  n = n(), epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
   # calculate episode duration
-  #group_by(fips, epoch) %>% 
+  group_by(fips, epoch) %>% 
   mutate(#last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
                                    #max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7,
-                                   label = paste(CTYNAME, ", ", ABBR, sep = "")) #%>%
+                                   label = paste(CTYNAME, ", ", ABBR, sep = "")) %>%
   # start in June
-  #filter(date >= "2021-06-01") 
+  filter(ymd >= "2021-06-01" & ymd <= "2022-05-15") 
 
 num_ep = dg %>% filter(trigger_on | trigger_off) %>% group_by(label) %>% arrange(date) %>%
   mutate(ep = sapply(1:n(), function(a) sum(trigger_on[1:a]))) %>%
@@ -53,7 +55,7 @@ d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     trigger = ifelse(check_bound, "Cases", "Hosps"),
                                     type = ifelse(trigger_on, "Start", "End")) %>%
   filter(trigger_on | trigger_off) %>%
-  dplyr::select(ymd, fips, state, time, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, label, type)
+  dplyr::select(ymd, fips, state, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, trigger, check_bound, check_bound2, label, type)
 
 # mortality 21-days later
 d_out %>% group_by(type) %>% summarize(mean = mean(deaths_weekly, na.rm = T),
@@ -86,14 +88,11 @@ plot1 = ggplot(dh, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(data = dh %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
   facet_wrap(.~label, ncol = 6) + 
-  geom_point(data = dh %>% filter(trigger_on), pch = 16, col = "navy",
+  geom_point(data = dh %>% filter(trigger_on2), pch = 16, col = "navy",
              aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
-  geom_text(data = dh %>% filter(trigger_on), aes(x = ymd-7 + 21, y = deaths_21_lag_100k*7 + 4,
-                                                  label = format(ifelse(deaths_21_lag_100k*7 < 10,
-                                                                        round(deaths_21_lag_100k*7,1),
-                                                                        round(deaths_21_lag_100k*7)), nsmall = 1)),
-            size = 2) + 
-  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +
+  geom_point(data = dh %>% filter(trigger_off2), pch = 1, col = "navy",
+             aes(x = ymd + 21, y = deaths_21_lag_100k*7)) + 
+   scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +
   scale_color_brewer(guide = "none", name = "", palette = "Set1") + 
   theme_minimal() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
