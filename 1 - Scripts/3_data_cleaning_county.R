@@ -14,19 +14,24 @@ data(state_census)
 s = state_census %>% dplyr::select(NAME, ABBR)
 
 #### HOSPITALIZATIONS ####
+c = read.csv(here("0 - Data", "United_States_COVID-19_Community_Levels_by_County.csv")) %>%
+  mutate(ymd = as.Date(date_updated, "%m/%d/%y")+1, fips = as.numeric(county_fips)) %>%
+  filter(ymd == "2022-05-06") %>%
+  dplyr::select(county, county_fips, state, fips,
+                county_population, health_service_area_number,
+                health_service_area, health_service_area_population)
+
 h = read.csv(here("0 - Data", "hosps_county.csv")) %>% 
+  mutate(fips = as.numeric(fips_code)) %>%
+  left_join(c, c("fips" = "fips")) %>%
   mutate(date = as.Date(collection_week, format = "%Y/%m/%d"),
-         
-         # rename for NYC
-         fips_code = ifelse(fips_code %in% c(36005, 36047, 36061, 36081, 36085),
-                            36998, fips_code),
          previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_adult_covid_confirmed_7_day_sum),
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
          previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_suspected_7_day_sum),
          inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, NA, inpatient_beds_used_covid_7_day_sum),
          inpatient_beds_7_day_avg = ifelse(inpatient_beds_7_day_avg < 0, NA, inpatient_beds_7_day_avg)) %>%
-  group_by(fips_code, date) %>%
+  group_by(health_service_area_number, health_service_area_population, date) %>%
   summarize(admits_confirmed = sum(previous_day_admission_adult_covid_confirmed_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_confirmed_7_day_sum, na.rm = T),
          admits_suspected = sum(previous_day_admission_adult_covid_suspected_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_suspected_7_day_sum, na.rm = T),
          inpt_beds_covid = sum(inpatient_beds_used_covid_7_day_sum, na.rm = T),
@@ -37,12 +42,15 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          admits_confirmed_avg = ifelse(is.na(admits_confirmed_avg), 0, admits_confirmed_avg),
          admits_suspected_avg = admits_suspected/7,
          perc_covid = inpt_beds_covid/7/inpt_beds,
-         perc_covid = ifelse(perc_covid=="Inf", 0, perc_covid))
+         perc_covid = ifelse(perc_covid=="Inf", 0, perc_covid),
+         admits_confirmed_100K = admits_confirmed_avg/health_service_area_population*100000,
+         admits_100K = admits_avg/health_service_area_population*100000) %>%
+  left_join(c, c("health_service_area_number" = "health_service_area_number")) %>% ungroup()
 
-k = table(paste(h$fips_code, h$date))
+k = table(paste(h$fips, h$date))
 k[k > 1]
 
-chk = h %>% filter(fips_code==09007)
+chk = h %>% filter(fips==09007)
 ggplot(chk, aes(x = date, y = admits_confirmed_avg)) + geom_line()
 ggplot(chk, aes(x = date, y = perc_covid)) + geom_line()
 
@@ -91,14 +99,13 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
   arrange(fips, ymd) %>%
   
   # join to hospital data
-  left_join(h %>% dplyr::select(date, fips_code, admits_avg,
-                                admits_confirmed_avg, admits_suspected_avg, perc_covid), 
-            c("fips"="fips_code", "ymd"="date")) %>%
-  mutate(admits_confirmed_100K = admits_confirmed_avg/POPESTIMATE2019*100000,
-         admits_100K = admits_avg/POPESTIMATE2019*100000) %>%
+  left_join(h %>% dplyr::select(date, fips, admits_avg, health_service_area_population.x,
+                                admits_confirmed_avg, admits_suspected_avg, perc_covid,
+                                admits_confirmed_100K, admits_100K), 
+            c("fips"="fips", "ymd"="date")) %>%
   
   # estimate CDC metrics
-  mutate(
+  mutate(POPESTIMATE2019 = health_service_area_population.x,
     
   # remove NAs from bed percentages
   perc_covid = ifelse(is.na(perc_covid), 0, perc_covid),
