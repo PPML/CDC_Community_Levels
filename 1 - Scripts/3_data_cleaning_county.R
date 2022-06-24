@@ -24,7 +24,7 @@ c = read.csv(here("0 - Data", "United_States_COVID-19_Community_Levels_by_County
 h = read.csv(here("0 - Data", "hosps_county.csv")) %>% 
   mutate(fips = as.numeric(fips_code)) %>%
   left_join(c, c("fips" = "fips")) %>%
-  mutate(date = as.Date(collection_week, format = "%Y/%m/%d"),
+  mutate(date = as.Date(collection_week, format = "%Y/%m/%d")+5,
          previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, 2, previous_day_admission_adult_covid_confirmed_7_day_sum),
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, .5, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
@@ -105,7 +105,7 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
             c("fips"="fips", "ymd"="date")) %>%
   
   # estimate CDC metrics
-  mutate(POPESTIMATE2019 = health_service_area_population.x,
+  mutate(#POPESTIMATE2019 = health_service_area_population.x,
     
   # remove NAs from bed percentages
   perc_covid = ifelse(is.na(perc_covid), 0, perc_covid),

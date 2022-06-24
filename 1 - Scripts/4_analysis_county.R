@@ -10,7 +10,7 @@ load(here("0 - Data", "combined_data_county.RData"))
 # Figure 1 
 dg = df %>% 
   # keep Wednesdays (when CDC updates criteria)
-  filter(dotw == "Friday") %>%
+  filter(dotw == "Wednesday") %>%
   filter(date >= "2021-01-01") 
 
 dg = dg %>%
@@ -112,7 +112,7 @@ roc_plot =  df %>%
   # start in June
   filter(date >= "2021-06-01") %>% 
   # keep Wednesdays (when CDC updates criteria)
-  filter(dotw == "Friday") %>% gather(var, value, cdc_flag_100_low, cdc_flag_200_low, cdc_flag_500_low,
+  filter(dotw == "Wednesday") %>% gather(var, value, cdc_flag_100_low, cdc_flag_200_low, cdc_flag_500_low,
                                       cdc_flag_1000_low,
                          cdc_flag_100_high, cdc_flag_200_high, cdc_flag_500_high, cdc_flag_1000_high) %>%
   group_by(var, value) %>% filter(!is.na(value)) %>% mutate(mean_val = mean(deaths_21_lag_100k, na.rm = T))
