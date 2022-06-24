@@ -10,12 +10,12 @@ source(here("global_options.R"))
 
 # our data
 d = read.csv(here("0 - Data", "combined_data_county.csv")) %>%
-  mutate(ymd = as.Date(ymd, format = "%Y-%m-%d")+7, fips = as.numeric(fips)) %>%
-  filter(dotw=="Friday")
+  mutate(ymd = as.Date(ymd, format = "%Y-%m-%d"), fips = as.numeric(fips)) %>%
+  filter(dotw=="Wednesday")
 
 # community levels
 c = read.csv(here("0 - Data", "United_States_COVID-19_Community_Levels_by_County.csv")) %>%
-  mutate(ymd = as.Date(date_updated, "%m/%d/%y")+1, fips = as.numeric(county_fips)) %>%
+  mutate(ymd = as.Date(date_updated, "%m/%d/%y")-1, fips = as.numeric(county_fips)) %>%
   filter(ymd <= "2022-06-03")
 
 # compare datasets on fips

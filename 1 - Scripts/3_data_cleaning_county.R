@@ -29,8 +29,9 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, .5, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
          previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_suspected_7_day_sum),
-         inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, NA, inpatient_beds_used_covid_7_day_sum),
-         inpatient_beds_7_day_sum = ifelse(inpatient_beds_7_day_sum < 0, NA, inpatient_beds_7_day_sum)) %>%
+         inpatient_beds_used_covid_7_day_sum = ifelse(total_pediatric_patients_hospitalized_confirmed_covid_7_day_sum < 0, 0, total_pediatric_patients_hospitalized_confirmed_covid_7_day_sum) + 
+           ifelse(total_adult_patients_hospitalized_confirmed_covid_7_day_sum < 0, 0, total_adult_patients_hospitalized_confirmed_covid_7_day_sum),
+         inpatient_beds_7_day_sum = ifelse(inpatient_beds_7_day_avg < 0, NA, inpatient_beds_7_day_avg)) %>%
   group_by(health_service_area_number, health_service_area_population, date) %>%
   summarize(admits_confirmed = sum(previous_day_admission_adult_covid_confirmed_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_confirmed_7_day_sum, na.rm = T),
          admits_suspected = sum(previous_day_admission_adult_covid_suspected_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_suspected_7_day_sum, na.rm = T),

@@ -24,8 +24,8 @@ h2 = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, .5, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
          previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, 1, previous_day_admission_pediatric_covid_suspected_7_day_sum),
-         inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, 1, inpatient_beds_used_covid_7_day_sum),
-         inpatient_beds_7_day_sum = ifelse(inpatient_beds_7_day_sum < 0, NA, inpatient_beds_7_day_sum)) %>%
+         inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, 2, inpatient_beds_used_covid_7_day_sum),
+         inpatient_beds_7_day_sum = ifelse(inpatient_beds_7_day_avg < 0, 2, inpatient_beds_7_day_avg)) %>%
   group_by(state, date) %>%
   summarize(admits_confirmed = sum(previous_day_admission_adult_covid_confirmed_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_confirmed_7_day_sum, na.rm = T),
             admits_suspected = sum(previous_day_admission_adult_covid_suspected_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_suspected_7_day_sum, na.rm = T),
@@ -39,6 +39,7 @@ h2 = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          perc_covid = inpt_beds_covid/7/inpt_beds,
          perc_covid = ifelse(perc_covid=="Inf", 0, perc_covid))
 
+
 h_comb = h %>% mutate(id = "Original") %>% bind_rows(h2 %>% mutate(id = "Roll-up")) 
 h_join = h %>% left_join(h2, c("state"="state", "date"="date")) %>% filter(!is.na(admits_confirmed_avg.y))
 cor(h_join$admits_confirmed.x, h_join$admits_confirmed.y, use = "pairwise.complete.obs")
@@ -46,3 +47,15 @@ cor(h_join$perc_covid.x, h_join$perc_covid.y, use = "pairwise.complete.obs")
 
 ggplot(h_comb %>% filter(state=="CT"), aes(x = date, y = admits_confirmed_avg, group = id, col = id)) + 
   geom_point(size = 1, alpha = .6, pch = 16)
+
+
+ggplot(h_comb %>% filter(state=="CA"), aes(x = date, y = perc_covid, group = id, col = id)) + 
+  geom_point(size = 1, alpha = .6, pch = 16)
+
+h_temp = read.csv(here("0 - Data", "hosps_county.csv")) %>%
+  mutate(conf = ifelse(total_pediatric_patients_hospitalized_confirmed_covid_7_day_sum < 0, 0, total_pediatric_patients_hospitalized_confirmed_covid_7_day_sum) + 
+           ifelse(total_adult_patients_hospitalized_confirmed_covid_7_day_sum < 0, 0, total_adult_patients_hospitalized_confirmed_covid_7_day_sum),
+         conf_and_susp = ifelse(total_pediatric_patients_hospitalized_confirmed_and_suspected_covid_7_day_sum < 0, 0, total_pediatric_patients_hospitalized_confirmed_and_suspected_covid_7_day_sum) + 
+           ifelse(total_adult_patients_hospitalized_confirmed_and_suspected_covid_7_day_sum < 0, 0, total_adult_patients_hospitalized_confirmed_and_suspected_covid_7_day_sum))
+
+View(h_temp %>% dplyr::select(conf, conf_and_susp, inpatient_beds_used_covid_7_day_sum))
