@@ -45,7 +45,9 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          perc_covid = ifelse(perc_covid=="Inf", 0, perc_covid),
          admits_confirmed_100K = admits_confirmed_avg/health_service_area_population*100000,
          admits_100K = admits_avg/health_service_area_population*100000) %>%
-  left_join(c, c("health_service_area_number" = "health_service_area_number")) %>% ungroup()
+  left_join(c, c("health_service_area_number" = "health_service_area_number")) %>% ungroup() %>%
+  filter(!fips%in%c(36005, 36047, 36061, 36081)) %>%
+  mutate(fips = ifelse(fips %in% c(36085), 36998, fips))
 
 k = table(paste(h$fips, h$date))
 k[k > 1]
