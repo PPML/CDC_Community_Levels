@@ -25,8 +25,8 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
   mutate(fips = as.numeric(fips_code)) %>%
   left_join(c, c("fips" = "fips")) %>%
   mutate(date = as.Date(collection_week, format = "%Y/%m/%d"),
-         previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_adult_covid_confirmed_7_day_sum),
-         previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
+         previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, 2, previous_day_admission_adult_covid_confirmed_7_day_sum),
+         previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, .5, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
          previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_suspected_7_day_sum),
          inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, NA, inpatient_beds_used_covid_7_day_sum),
