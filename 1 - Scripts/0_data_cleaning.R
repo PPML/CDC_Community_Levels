@@ -9,7 +9,7 @@ data(hhs_regions)
 
 #### HOSPITALIZATIONS ####
 h = read.csv(here("0 - Data", "hosps.csv")) %>% group_by(state) %>%
-  mutate(date = as.Date(date, format = "%Y/%m/%d")-1) %>%
+  mutate(date = as.Date(date, format = "%Y/%m/%d")) %>%
   arrange(date) %>%
   mutate(admits_confirmed = previous_day_admission_adult_covid_confirmed + previous_day_admission_pediatric_covid_confirmed,
          admits_suspected = previous_day_admission_adult_covid_suspected + previous_day_admission_pediatric_covid_suspected,

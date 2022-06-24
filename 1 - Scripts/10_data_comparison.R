@@ -23,14 +23,14 @@ h2 = read.csv(here("0 - Data", "hosps_county.csv")) %>%
          previous_day_admission_adult_covid_confirmed_7_day_sum = ifelse(previous_day_admission_adult_covid_confirmed_7_day_sum < 0, 2, previous_day_admission_adult_covid_confirmed_7_day_sum),
          previous_day_admission_pediatric_covid_confirmed_7_day_sum = ifelse(previous_day_admission_pediatric_covid_confirmed_7_day_sum < 0, .5, previous_day_admission_pediatric_covid_confirmed_7_day_sum),
          previous_day_admission_adult_covid_suspected_7_day_sum = ifelse(previous_day_admission_adult_covid_suspected_7_day_sum < 0, NA, previous_day_admission_adult_covid_suspected_7_day_sum),
-         previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, NA, previous_day_admission_pediatric_covid_suspected_7_day_sum),
-         inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, NA, inpatient_beds_used_covid_7_day_sum),
-         inpatient_beds_7_day_avg = ifelse(inpatient_beds_7_day_avg < 0, NA, inpatient_beds_7_day_avg)) %>%
+         previous_day_admission_pediatric_covid_suspected_7_day_sum = ifelse(previous_day_admission_pediatric_covid_suspected_7_day_sum < 0, 1, previous_day_admission_pediatric_covid_suspected_7_day_sum),
+         inpatient_beds_used_covid_7_day_sum = ifelse(inpatient_beds_used_covid_7_day_sum < 0, 1, inpatient_beds_used_covid_7_day_sum),
+         inpatient_beds_7_day_sum = ifelse(inpatient_beds_7_day_sum < 0, NA, inpatient_beds_7_day_sum)) %>%
   group_by(state, date) %>%
   summarize(admits_confirmed = sum(previous_day_admission_adult_covid_confirmed_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_confirmed_7_day_sum, na.rm = T),
             admits_suspected = sum(previous_day_admission_adult_covid_suspected_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_suspected_7_day_sum, na.rm = T),
             inpt_beds_covid = sum(inpatient_beds_used_covid_7_day_sum, na.rm = T),
-            inpt_beds = sum(inpatient_beds_7_day_avg, na.rm = T)) %>%
+            inpt_beds = sum(inpatient_beds_7_day_sum, na.rm = T)) %>%
   mutate(admits = admits_confirmed + admits_suspected,
          admits_avg = admits/7,
          admits_confirmed_avg = admits_confirmed/7,
@@ -42,6 +42,7 @@ h2 = read.csv(here("0 - Data", "hosps_county.csv")) %>%
 h_comb = h %>% mutate(id = "Original") %>% bind_rows(h2 %>% mutate(id = "Roll-up")) 
 h_join = h %>% left_join(h2, c("state"="state", "date"="date")) %>% filter(!is.na(admits_confirmed_avg.y))
 cor(h_join$admits_confirmed.x, h_join$admits_confirmed.y, use = "pairwise.complete.obs")
+cor(h_join$perc_covid.x, h_join$perc_covid.y, use = "pairwise.complete.obs")
 
 ggplot(h_comb %>% filter(state=="CT"), aes(x = date, y = admits_confirmed_avg, group = id, col = id)) + 
   geom_point(size = 1, alpha = .6, pch = 16)
