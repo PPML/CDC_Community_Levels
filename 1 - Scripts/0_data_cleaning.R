@@ -18,8 +18,15 @@ h = read.csv(here("0 - Data", "hosps.csv")) %>% group_by(state) %>%
          admits_avg = ifelse(is.na(admits_avg), 0, admits_avg),
          admits_confirmed_avg = rollmean(admits_confirmed, k = 7, align = "right", na.pad = TRUE, na.rm = T),
          admits_suspected_avg = rollmean(admits_suspected, k = 7, align = "right", na.pad = TRUE, na.rm = T),
+         denom_factor = ifelse(total_adult_patients_hospitalized_confirmed_and_suspected_covid >= 0, total_adult_patients_hospitalized_confirmed_and_suspected_covid, NA) + 
+           ifelse(total_pediatric_patients_hospitalized_confirmed_and_suspected_covid >= 0, total_pediatric_patients_hospitalized_confirmed_and_suspected_covid, NA),
+         num_factor = ifelse(total_adult_patients_hospitalized_confirmed_covid >= 0, total_adult_patients_hospitalized_confirmed_covid, NA) + 
+           ifelse(total_pediatric_patients_hospitalized_confirmed_covid >= 0, total_pediatric_patients_hospitalized_confirmed_covid, NA),
+         factor = ifelse(!is.na(num) & !is.na(denom), num/denom, 1),
+         factor_count = is.na(num) | is.na(denom),
          hosped_avg = rollmean(total_adult_patients_hospitalized_confirmed_covid + total_pediatric_patients_hospitalized_confirmed_covid, k = 7, align = "right", na.pad = T, na.rm = T),
-         perc_covid = rollmean(percent_of_inpatients_with_covid, k = 7, align = "right", na.pad = TRUE, na.rm = T))
+         perc_covid = rollmean(percent_of_inpatients_with_covid, k = 7, align = "right", na.pad = TRUE, na.rm = T),
+         factor_avg = rollmean(factor, k = 7, align = "right", na.pad = TRUE, na.rm = T))
 
 #### CASES BY VAX STATUS ####
 v = read.csv(here("0 - Data", "cases_by_vax.csv")) %>%
@@ -103,7 +110,7 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   
   # join to hospital data
   left_join(h %>% dplyr::select(date, state, admits_avg,
-                                admits_confirmed_avg, admits_suspected_avg, perc_covid, hosped_avg), 
+                                admits_confirmed_avg, admits_suspected_avg, perc_covid, hosped_avg, factor, factor_count, factor_avg, num_factor, denom_factor), 
             c("ABBR"="state", "ymd"="date")) %>%
   mutate(admits_confirmed_100K = admits_confirmed_avg/POPESTIMATE2019*100000,
          admits_100K = admits_avg/POPESTIMATE2019*100000) %>%

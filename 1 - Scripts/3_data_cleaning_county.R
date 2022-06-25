@@ -36,7 +36,9 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
   summarize(admits_confirmed = sum(previous_day_admission_adult_covid_confirmed_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_confirmed_7_day_sum, na.rm = T),
          admits_suspected = sum(previous_day_admission_adult_covid_suspected_7_day_sum, na.rm = T) + sum(previous_day_admission_pediatric_covid_suspected_7_day_sum, na.rm = T),
          inpt_beds_covid = sum(inpatient_beds_used_covid_7_day_sum, na.rm = T),
-         inpt_beds = sum(inpatient_beds_7_day_sum, na.rm = T)) %>%
+         inpt_beds = sum(inpatient_beds_7_day_sum, na.rm = T),
+         missing_kid = sum(is.na(previous_day_admission_pediatric_covid_confirmed_7_day_sum)), missing_kid_perc = mean(is.na(previous_day_admission_pediatric_covid_confirmed_7_day_sum)),
+         missing_adult = sum(is.na(previous_day_admission_adult_covid_confirmed_7_day_sum)), missing_adult_perc = mean(is.na(previous_day_admission_adult_covid_confirmed_7_day_sum))) %>%
   mutate(admits = admits_confirmed + admits_suspected,
          admits_avg = admits/7,
          admits_confirmed_avg = admits_confirmed/7,
@@ -49,6 +51,22 @@ h = read.csv(here("0 - Data", "hosps_county.csv")) %>%
   left_join(c, c("health_service_area_number" = "health_service_area_number")) %>% ungroup() %>%
   filter(!fips%in%c(36005, 36047, 36061, 36081)) %>%
   mutate(fips = ifelse(fips %in% c(36085), 36998, fips))
+
+g = h %>% group_by(health_service_area, health_service_area_population.x) %>%
+  summarize(missing_kid = sum(missing_kid),
+            missing_kid_perc = mean(missing_kid_perc),
+            missing_adult = sum(missing_adult),
+            max_perc_missing = max(missing_adult_perc),
+            missing_adult_perc = mean(missing_adult_perc))
+table(g$missing_adult_perc)
+table(g$max_perc_missing)
+
+sum(g$missing_adult_perc>0.01)
+sum(g$max_perc_missing>.4)
+
+set1 = g$health_service_area[g$missing_adult_perc<0.01 & g$missing_kid_perc<0.01]
+set2 = g$health_service_area[g$max_perc_missing<.15]
+
 
 k = table(paste(h$fips, h$date))
 k[k > 1]

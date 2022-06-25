@@ -45,7 +45,6 @@ table(e$flag_alt2_us, e$flag_alt2_cdc)
 
 cor(e$admits_confirmed_100K, e$covid_hospital_admissions_per_100k, use = "pairwise.complete.obs") 
 cor(e$perc_covid, e$covid_inpatient_bed_utilization, use = "pairwise.complete.obs") 
-cor(e$covid_hospital_admissions_per_100k, e$admits_confirmed_100K, use = "pairwise.complete.obs") 
 
 chk1 = e %>% filter(cdc_flag & !cdc_high) %>% 
   dplyr::select(fips, ymd, 
@@ -92,4 +91,11 @@ ggplot(e %>% filter(county_population > 1e6) %>% gather(var, value, covid_hospit
 
 e %>% filter(county_population > 1e6) %>% summarize(cor(cdc_flag, cdc_high, use = "pairwise.complete"))
 
+f = e %>% filter(county_population > 500000) 
+table(f$cdc_high, f$cdc_flag)
 
+f1 = e %>% filter(health_service_area%in%set1)
+table(f1$cdc_high, f1$cdc_flag)
+
+f2 = e %>% filter(health_service_area%in%set2)
+table(f2$cdc_high, f2$cdc_flag)
