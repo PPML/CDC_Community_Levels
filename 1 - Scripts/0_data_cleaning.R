@@ -22,14 +22,16 @@ h = read.csv(here("0 - Data", "hosps.csv")) %>% group_by(state) %>%
            ifelse(total_pediatric_patients_hospitalized_confirmed_and_suspected_covid >= 0, total_pediatric_patients_hospitalized_confirmed_and_suspected_covid, NA),
          num_factor = ifelse(total_adult_patients_hospitalized_confirmed_covid >= 0, total_adult_patients_hospitalized_confirmed_covid, NA) + 
            ifelse(total_pediatric_patients_hospitalized_confirmed_covid >= 0, total_pediatric_patients_hospitalized_confirmed_covid, NA),
+         num_factor = ifelse(is.na(denom_factor), NA, num_factor),
+         denom_factor = ifelse(is.na(num_factor), NA, denom_factor),
          factor = ifelse(!is.na(num_factor) & !is.na(denom_factor), num_factor/denom_factor, 1),
          factor_count = is.na(num_factor) | is.na(denom_factor),
          hosped_avg = rollmean(total_adult_patients_hospitalized_confirmed_covid + total_pediatric_patients_hospitalized_confirmed_covid, k = 7, align = "right", na.pad = T, na.rm = T),
          perc_covid = rollmean(percent_of_inpatients_with_covid, k = 7, align = "right", na.pad = TRUE, na.rm = T),
          factor_avg1 = rollmean(num_factor, k = 7, align = "right", na.pad = TRUE, na.rm = F)/rollmean(denom_factor, k = 7, align = "right", na.pad = TRUE, na.rm = F),
-         factor_avg1 = ifelse(is.na(factor_avg1), 1, factor_avg1),
+         factor_avg1 = ifelse(is.na(factor_avg1) | factor_avg1 > 1, 1, factor_avg1),
          factor_avg2 = rollmean(num_factor, k = 7, align = "right", na.pad = TRUE, na.rm = T)/rollmean(denom_factor, k = 7, align = "right", na.pad = TRUE, na.rm = T),
-         factor_avg2 = ifelse(is.na(factor_avg2), 1, factor_avg2)
+         factor_avg2 = ifelse(is.na(factor_avg2) | factor_avg2 > 1, 1, factor_avg2)
          )
 
 #### CASES BY VAX STATUS ####
