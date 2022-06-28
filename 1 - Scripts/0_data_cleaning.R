@@ -31,7 +31,8 @@ h = read.csv(here("0 - Data", "hosps.csv")) %>% group_by(state) %>%
          factor_avg1 = rollmean(num_factor, k = 7, align = "right", na.pad = TRUE, na.rm = F)/rollmean(denom_factor, k = 7, align = "right", na.pad = TRUE, na.rm = F),
          factor_avg1 = ifelse(is.na(factor_avg1) | factor_avg1 > 1, 1, factor_avg1),
          factor_avg2 = rollmean(num_factor, k = 7, align = "right", na.pad = TRUE, na.rm = T)/rollmean(denom_factor, k = 7, align = "right", na.pad = TRUE, na.rm = T),
-         factor_avg2 = ifelse(is.na(factor_avg2) | factor_avg2 > 1, 1, factor_avg2)
+         factor_avg2 = ifelse(is.na(factor_avg2) | factor_avg2 > 1, 1, factor_avg2),
+         perc_covid = perc_covid*factor_avg2
          )
 
 #### CASES BY VAX STATUS ####
