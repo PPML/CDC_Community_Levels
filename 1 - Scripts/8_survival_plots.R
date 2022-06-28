@@ -14,7 +14,7 @@ format_data = function(source = "combined-county-2022-06-16-export.csv"){
     gather(var, value, triggeron, triggeron2, triggeron3) %>%
     filter(value==1 & !is.na(value)) %>%
     mutate(ymd = as.Date(ymd, format = "%Y-%m-%d"),
-           followtime = (as.Date("2022-05-06")-ymd)/7,
+           followtime = (max(ymd)-ymd)/7,
            lagcdc = ifelse(var=="triggeron2", lagcdc2, lagcdc3),
            event = lagcdc < followtime,
            event = ifelse(is.na(event), 0, event),
@@ -61,7 +61,7 @@ plots1 = make_plots(df1, title1 = "Time from new trigger to CDC High",
                     title2 = "Time from new trigger until deaths >0.9/100K/week")
 
 # states
-df2 = format_data(source =  here("0 - Data", "Archive-processed-2022-06-27", "combined-state-2022-06-27-export.csv"))
+df2 = format_data(source =  here("0 - Data", "combined-state-2022-06-28-export.csv"))
 plots2 = make_plots(df2)
 
 # combine plots
