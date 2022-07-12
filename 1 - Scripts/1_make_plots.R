@@ -10,7 +10,7 @@ load(here("0 - Data", "combined_data.RData"))
 # Figure 1 
 dg = df %>% 
   # start in June
-  filter(date >= "2021-01-01") %>% 
+  filter(ymd >= "2021-06-01" & ymd <= "2022-06-01") %>%
   # keep Wednesdays (when CDC updates criteria)
   filter(dotw == "Wednesday") %>%
   group_by(state) %>% arrange(date) %>%
@@ -18,15 +18,19 @@ dg = df %>%
   mutate(trigger_on = cdc_flag & !lag(cdc_flag,1) & lead(cdc_flag,1),
          trigger_off = cdc_flag & !lead(cdc_flag,1) & !lead(cdc_flag,2),
          trigger_on2 = cdc_flag & !lag(cdc_flag,1),
-         trigger_off2 = cdc_flag & !lead(cdc_flag,1)) %>%
+         trigger_off2 = cdc_flag & !lead(cdc_flag,1),
+         trigger_on3 = alt_flag1 & !lag(alt_flag1,1),
+         trigger_off3 = alt_flag1 & !lead(alt_flag1,1),
+         trigger_on4 = alt_flag2 & !lag(alt_flag2,1),
+         trigger_off4 = alt_flag2 & !lead(alt_flag2,1),
+         ) %>%
   # define variables for plotting episodes
   group_by(state) %>% mutate(grp = lag(cdc_flag,1)!=cdc_flag | is.na(lag(cdc_flag,1)),
                              n = n(),
                              epoch = sapply(1:n, function(a) sum(grp[1:a]))) %>%
   # calculate episode duration
   group_by(state, epoch) %>% mutate(last = max(ymd[cdc_flag]), time = as.numeric(last-ymd)/7 +1,
-                                    max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7) %>%
-  filter(ymd >= "2021-06-01" & ymd <= "2022-05-15")
+                                    max = max(deaths_21_lag_100k[cdc_flag], na.rm = T)*7) 
 
 # subsets
 num_ep = dg %>% filter(trigger_on | trigger_off) %>% group_by(state) %>% arrange(date) %>%
@@ -38,7 +42,7 @@ table(num_ep$trigger_on)
 table(num_ep$trigger_off)
 
 # create figure 1
-plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
+plot1 = ggplot(dg %>% filter(ymd <= "2022-05-15"), aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dg %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
@@ -63,7 +67,7 @@ plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
 ggsave(here("2 - Figures", "cdc_plot_deaths.png"), plot = plot1, width = 8, height = 11)
 
 # create figure 1
-plot1 = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
+plot1 = ggplot(dg %>% filter(ymd <= "2022-05-15"), aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dg %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
@@ -89,7 +93,7 @@ ggsave(here("2 - Figures", "cdc_plot_deaths2.png"), plot = plot1, width = 8, hei
 
 
 # create figure 1
-plot1c = ggplot(dg, aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
+plot1c = ggplot(dg %>% filter(ymd <= "2022-05-15"), aes(x = ymd + 21, y = deaths_21_lag_100k*7)) +
   geom_line(col = "grey", lwd = .3) + 
   geom_line(data = dg %>% filter(cdc_flag), 
             aes(x = ymd + 21, y = deaths_21_lag_100k*7, group = paste(state, epoch)), col = "navy", lwd = .3) +
@@ -117,19 +121,68 @@ ggsave(here("2 - Figures", "cdc_plot_deaths3.png"), plot = plot1c, width = 8, he
 
 # Table S1
 # pull CDC indicators and lagged 21 day outcomes
-d_out = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
+d_out_pre = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     admits_weekly = admits_confirmed_100K*7,
                                     cases_weekly = round(cases_avg_per_100k*7),
                                     perc_covid_100 = perc_covid*100,
-                                    trigger = ifelse(check_bound, "Cases", "Hosps"),
-                                    type = ifelse(trigger_on, "Start", "End")) %>%
-  filter(trigger_on | trigger_off) %>%
-  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, trigger, max, check_bound, check_bound2, type) %>%
+                                    deaths_weekly = ifelse(ymd>="2022-05-15", NA, deaths_weekly)) %>%
+  arrange(ymd) %>% group_by(state) %>%
+  mutate(zeke_time_0 = deaths_weekly > .9,
+         zeke_time_1 = lead(deaths_weekly, 1) > .9,
+         zeke_time_2 = lead(deaths_weekly, 2) > .9,
+         zeke_time_3 = lead(deaths_weekly, 3) > .9,
+         zeke_time_4 = lead(deaths_weekly, 4) > .9,
+         zeke_time_5 = lead(deaths_weekly, 5) > .9,
+         zeke_time_6 = lead(deaths_weekly, 6) > .9,
+         zeke_time_7 = lead(deaths_weekly, 7) > .9,
+         zeke_time_8 = lead(deaths_weekly, 8) > .9,
+         zeke_time_9 = lead(deaths_weekly, 9) > .9,
+         zeke_time_10 = lead(deaths_weekly, 10) > .9,
+         zeke_time_11 = lead(deaths_weekly, 11) > .9,
+         zeke_time_12 = lead(deaths_weekly, 12)> .9,
+         zeke_lt_eq3 = (zeke_time_0 + zeke_time_1 + zeke_time_2 + zeke_time_3) > 0,
+         zeke_lt_eq6 = (zeke_lt_eq3 + zeke_time_4 + zeke_time_5 + zeke_time_6) > 0,
+         time_to_zeke = 15,
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_0, 0, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_1, 1, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_2, 2, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_3, 3, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_4, 4, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_5, 5, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_6, 6, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_7, 7, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_8, 8, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_9, 9, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_10, 10, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_11, 11, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_12, 12, time_to_zeke)
+  )
+
+d_out = d_out_pre %>% gather(trigger, ind, trigger_on2, trigger_off2) %>%
+  filter(ind==TRUE) %>% 
+  mutate(type = ifelse(grepl("trigger_on", trigger), "Start", "End")) %>% dplyr::select(-ind) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, type, max, check_bound, check_bound2, type) %>%
   rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
          "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
-         "Weekly deaths per 100K 21 days after start" = 7, "Binding indicator" = 8)
+         "Weekly deaths per 100K 21 days after start" = 7, "type" = 8)
+  
+d_out_alt1 = d_out_pre %>% gather(trigger, ind, trigger_on3, trigger_off3) %>%
+  filter(ind==TRUE) %>% 
+  mutate(type = ifelse(grepl("trigger_on", trigger), "Start", "End")) %>% dplyr::select(-ind) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, type, max, check_bound, check_bound2, type) %>%
+  rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
+         "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
+         "Weekly deaths per 100K 21 days after start" = 7, "type" = 8)
+  
+d_out_alt2 = d_out_pre %>% gather(trigger, ind, trigger_on4, trigger_off4) %>%
+  filter(ind==TRUE) %>%
+  mutate(type = ifelse(grepl("trigger_on", trigger), "Start", "End")) %>% dplyr::select(-ind) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, type, max, check_bound, check_bound2, type) %>%
+  rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
+         "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
+         "Weekly deaths per 100K 21 days after start" = 7, "type" = 8)
+  
 write.csv(d_out, file = here("2 - Figures", "table_s1.csv"))
-
 
 # Figure 2
 us = df %>% 
@@ -183,7 +236,7 @@ plot2 = ggplot(us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = cfr, group = s
   ylim(0, 4) 
 ggsave(here("2 - Figures", "cfr_regional_21.png"), plot = plot2, width = 8, height = 4)
 
-plot2a = ggplot(us %>% 
+plot2a = ggplot(us %>% filter(dotw=="Saturday") %>%
                   gather(var, value, hosp_case_reg, cfr_region)%>%
                   group_by(var) %>% mutate(value2 = scale(value)), 
                 aes(x = ymd, y = value2, group = var, col = var)) +
@@ -199,6 +252,23 @@ plot2a = ggplot(us %>%
         plot.title = element_text(face = "bold")) + 
   labs(x = "", y = "Scaled outcomes", title = "")
 plot2a
+
+plot2b = ggplot(us %>% filter(dotw=="Saturday" & ymd >= "2021-12-01") %>%
+                  gather(var, value, hosp_case, cfr) %>%
+                  group_by(var, state) %>% mutate(value2 = scale(value)), 
+                aes(x = ymd, y = value2, group = var, col = var)) +
+  facet_wrap(.~state, scales = "free") + 
+  geom_line() + 
+  #geom_line(data = us %>% filter(dotw == "Tuesday"), aes(x = ymd, y = hosp_case), col = "#000080") + 
+  scale_x_date(date_breaks = "3 month", date_labels =  "%b %Y") +
+  theme_minimal() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_blank(),
+        axis.text.x=element_text(size = 7, angle=60, hjust=1),
+        strip.text=element_text(size = 10),
+        plot.title = element_text(face = "bold")) + 
+  labs(x = "", y = "Scaled outcomes", title = "")
+ggsave("states.pdf", plot2b, width = 11, height = 11, unit = "in")
 
 # create figure s1
 plot_s1 = ggplot(us %>% filter(ymd <= "2022-02-15" & dotw == "Tuesday"), aes(x = ymd, y = cfr, group = state)) +

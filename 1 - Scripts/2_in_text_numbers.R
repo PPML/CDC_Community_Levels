@@ -8,31 +8,44 @@ source(here("1 - Scripts", "1_make_plots.R"))
 # number of new episodes
 dim(d_out)
 
-# mortality 21-days later
-d_out %>% group_by(type) %>% 
-  summarize(mean = mean(`Weekly deaths per 100K 21 days after start`, na.rm = T),
-                    median = median(`Weekly deaths per 100K 21 days after start`, na.rm = T),
-                    q25 = quantile(`Weekly deaths per 100K 21 days after start`, .25, na.rm = T),
-                    q75 = quantile(`Weekly deaths per 100K 21 days after start`, .75, na.rm = T),
-                    gt_0.9 = sum(`Weekly deaths per 100K 21 days after start`>.9, na.rm = T),
-                    gt_2.1 = sum(`Weekly deaths per 100K 21 days after start`>2.1, na.rm = T),
-                    gt_0.9_p = mean(`Weekly deaths per 100K 21 days after start`>.9, na.rm = T),
-                    gt_2.1_p = mean(`Weekly deaths per 100K 21 days after start`>2.1, na.rm = T))
+summ_stats = function(d_out, filename = "table1.csv"){
+  # mortality 21-days later
+  k1 = d_out %>% 
+    gather(var, value, `Weekly cases per 100K`, `Weekly hospital admissions per 100K`,
+           `Percentage of inpatient beds occupied by COVID-19 patients`,
+           `Weekly deaths per 100K 21 days after start`) %>%
+    mutate(var = factor(var, levels = c("Weekly cases per 100K", "Weekly hospital admissions per 100K",
+                                        "Percentage of inpatient beds occupied by COVID-19 patients",
+                                        "Weekly deaths per 100K 21 days after start")),
+           type = factor(type, levels = c("Start", "End"))) %>%
+    group_by(type, var) %>%
+    summarize(n = sum(!is.na(value)), mean = round(mean(value, na.rm = T),1),
+              median = round(median(value, na.rm = T), 1),
+              q25 = round(quantile(value, .25, na.rm = T), 1),
+              q75 = round(quantile(value, .75, na.rm = T), 1))
+  
+  # mortality 21-days later by epoch
+  k2 = d_out %>% mutate(epoch = case_when(`Start date`<"2021-10-01"~"Per 1", 
+                                     `Start date`>="2021-10-01" & `Start date`<"2022-02-01"~"Per 2",
+                                     `Start date` >= "2022-02-01"~"Per 3")) %>%
+    group_by(epoch) %>% filter(type=="Start") %>% summarize(n = sum(!is.na(`Weekly deaths per 100K 21 days after start`)),
+                      mean = round(mean(`Weekly deaths per 100K 21 days after start`, na.rm = T),1),
+                      median = round(median(`Weekly deaths per 100K 21 days after start`, na.rm = T),1),
+                      q25 = round(quantile(`Weekly deaths per 100K 21 days after start`, .25, na.rm = T),1),
+                      q75 = round(quantile(`Weekly deaths per 100K 21 days after start`, .75, na.rm = T),1))
 
+  write.csv(bind_rows(k1, k2), file = here("3 - Supplement", filename))
+  
+}
 
-# mortality 21-days later by epoch
-d_out %>% mutate(epoch = ifelse(`Start date`>="2021-11-01", "Omicron", "Delta")) %>%
-  group_by(epoch, type) %>% summarize(n = n(),
-                    mean = mean(`Weekly deaths per 100K 21 days after start`, na.rm = T),
-                    median = median(`Weekly deaths per 100K 21 days after start`, na.rm = T),
-                    q25 = quantile(`Weekly deaths per 100K 21 days after start`, .25, na.rm = T),
-                    q75 = quantile(`Weekly deaths per 100K 21 days after start`, .75, na.rm = T),
-                    quantile = quantile(max, .25, na.rm = T), max_peak = quantile(max, .75, na.rm = T))
+summ_stats(d_out)
+summ_stats(d_out_alt1, filename = "alt1_states.csv")
+summ_stats(d_out_alt2, filename = "alt2_states.csv")
 
 # case fatality
 # aggregate over US
 us2 = us %>% group_by(ymd, dotw) %>% 
-  filter(ymd>="2021-07-01") %>%
+  filter(ymd>="2021-12-01") %>%
   summarize(
   num = sum(deaths_lag.21), denom = sum(cases_avg),
   admits = sum(admits_lag.21),
@@ -95,6 +108,10 @@ us2 %>% filter(max_omi) %>% mutate(ymd_shift = ymd + 21)
 # minimum
 us2 %>% filter(min_omi) %>% mutate(ymd_shift = ymd + 21)
 
+
+min(us2$hfr.21, na.rm = T)
+max(us2$hfr.21, na.rm = T)
+
 # current
 us2 %>% filter(ymd=="2022-03-15") %>% mutate(ymd_shift = ymd + 21)
 
@@ -132,7 +149,7 @@ ggplot(us2 %>% gather(var, value, cfr.lag, cfr.dec3, cfr.dec4) %>%
 ggsave(here("2 - Figures", "cfr_national_lags.png"), plot = last_plot(), width = 6, height = 4)
 
 
-ggplot(us2 %>% filter(ymd>="2021-12-01") %>% gather(var, value, cfr, hosp_case, hfr.14) %>% group_by(var) %>%
+ggplot(us2 %>% filter(ymd>="2022-05-01") %>% gather(var, value, cfr, hosp_case, hfr.21) %>% group_by(var) %>%
          mutate(value2 = scale(value)), 
        aes(x = ymd, y = value2, group = var, col = var)) + geom_line() +
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +

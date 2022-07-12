@@ -68,7 +68,7 @@ plots2 = make_plots(df2)
 e = ggarrange(plots1[[1]], plots1[[2]], legend = F) %>%
   annotate_figure(right = "Counties        ")
 f = ggarrange(plots2[[1]], plots2[[2]], legend = F) %>% annotate_figure(right = "States             ")
-g = ggarrange(e,f, ncol = 1) %>% annotate_figure(bottom = "Time (weeks)") %>% 
+g = ggarrange(f,e, ncol = 1) %>% annotate_figure(bottom = "Time (weeks)") %>% 
   ggarrange(legend_1 <- get_legend(plots2[[2]]), heights = c(2,.2),
          ncol = 1)
 g
@@ -82,8 +82,8 @@ plots1a = make_plots(df1, title1 = "",
 plots2a = make_plots(df2, title1 = "",
                      title2 = "States")
 
-h = ggarrange(plots1a[[2]], 
-              plots2a[[2]], common.legend = T, legend = "bottom")
+h = ggarrange(plots2a[[2]], 
+              plots1a[[2]], common.legend = T, legend = "bottom")
 h
 
 ggsave(here("2 - Figures", "survival_zeke.png"), width = 10, height = 4, units = "in")
