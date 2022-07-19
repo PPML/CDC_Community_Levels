@@ -8,6 +8,57 @@ source(here("1 - Scripts", "1_make_plots.R"))
 # number of new episodes
 dim(d_out)
 
+ss = d_out_pre %>% ungroup() %>%
+  #filter(ymd >= "2022-04-01") %>%
+  gather(var, value, cdc_flag, alt_flag1, alt_flag2) %>%
+  group_by(var) %>%
+  summarize(sens_0 = round(sum(zeke_time_0 & value, na.rm = T)/sum(zeke_time_0 & !is.na(value), na.rm = T), 2),
+            sens_3 = round(sum(zeke_time_3 & value, na.rm = T)/sum(zeke_time_3 & !is.na(value), na.rm = T), 2),
+            sens_6 = round(sum(zeke_time_6 & value, na.rm = T)/sum(zeke_time_6 & !is.na(value), na.rm = T), 2),
+            spec_0 = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!zeke_time_0 & !is.na(value), na.rm = T), 2),
+            spec_3 = round(sum(!zeke_time_3 & !value, na.rm = T)/sum(!zeke_time_3 & !is.na(value), na.rm = T), 2),
+            spec_6 = round(sum(!zeke_time_6 & !value, na.rm = T)/sum(!zeke_time_6 & !is.na(value), na.rm = T), 2),
+            ppv_0 = round(sum(zeke_time_0 & value, na.rm = T)/sum(value & !is.na(zeke_time_0), na.rm = T), 2),
+            ppv_3 = round(sum(zeke_time_3 & value, na.rm = T)/sum(value & !is.na(zeke_time_3), na.rm = T), 2),
+            ppv_6 = round(sum(zeke_time_6 & value, na.rm = T)/sum(value & !is.na(zeke_time_6), na.rm = T), 2),
+            npv_0 = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_0), na.rm = T), 2),
+            npv_3 = round(sum(!zeke_time_3 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_3), na.rm = T), 2),
+            npv_6 = round(sum(!zeke_time_6 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_6), na.rm = T), 2))
+
+ss
+write.csv(ss, file = here("3 - Supplement", "sens_spec_states.csv"))
+
+
+ss = d_out_pre %>% ungroup() %>%
+  filter(ymd >= "2022-04-01") %>%
+  gather(var, value, cdc_flag, alt_flag1, alt_flag2) %>%
+  group_by(var) %>%
+  summarize(sens_0LT = round(sum(zeke_time_0 & value, na.rm = T)/sum(zeke_time_0 & !is.na(value), na.rm = T), 2),
+            sens_3LT = round(sum(zeke_lt_eq3 & value, na.rm = T)/sum(zeke_lt_eq3 & !is.na(value), na.rm = T), 2),
+            sens_6LT = round(sum(zeke_lt_eq6 & value, na.rm = T)/sum(zeke_lt_eq6 & !is.na(value), na.rm = T), 2),
+            spec_0LT = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!zeke_time_0 & !is.na(value), na.rm = T), 2),
+            spec_3LT = round(sum(!zeke_lt_eq3 & !value, na.rm = T)/sum(!zeke_lt_eq3 & !is.na(value), na.rm = T), 2),
+            spec_6LT = round(sum(!zeke_lt_eq6 & !value, na.rm = T)/sum(!zeke_lt_eq6 & !is.na(value), na.rm = T), 2),
+            ppv_0LT = round(sum(zeke_time_0 & value, na.rm = T)/sum(value & !is.na(zeke_time_0), na.rm = T), 2),
+            ppv_3LT = round(sum(zeke_lt_eq3 & value, na.rm = T)/sum(value & !is.na(zeke_lt_eq3), na.rm = T), 2),
+            ppv_6LT = round(sum(zeke_lt_eq6 & value, na.rm = T)/sum(value & !is.na(zeke_lt_eq6), na.rm = T), 2),
+            npv_0LT = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_0), na.rm = T), 2),
+            npv_3LT = round(sum(!zeke_lt_eq3 & !value, na.rm = T)/sum(!value & !is.na(zeke_lt_eq3), na.rm = T), 2),
+            npv_6LT = round(sum(!zeke_lt_eq6 & !value, na.rm = T)/sum(!value & !is.na(zeke_lt_eq6), na.rm = T), 2))
+
+ss
+
+d_out_pre %>% group_by(trigger_on3) %>% summarize(mean(zeke_time_0, na.rm = T), 
+                                                  mean(zeke_lt_eq3, na.rm = T), 
+                                                  mean(zeke_lt_eq6, na.rm = T))
+
+d_out_pre %>% group_by(trigger_on4) %>% summarize(mean(zeke_time_0, na.rm = T), 
+                                                  mean(zeke_lt_eq3, na.rm = T), 
+                                                  mean(zeke_lt_eq6, na.rm = T))
+
+table(d_out_pre$zeke_time_0, d_out_pre$cdc_flag)
+
+
 summ_stats = function(d_out, filename = "table1.csv"){
   # mortality 21-days later
   k1 = d_out %>% 
@@ -19,10 +70,11 @@ summ_stats = function(d_out, filename = "table1.csv"){
                                         "Weekly deaths per 100K 21 days after start")),
            type = factor(type, levels = c("Start", "End"))) %>%
     group_by(type, var) %>%
-    summarize(n = sum(!is.na(value)), mean = round(mean(value, na.rm = T),1),
-              median = round(median(value, na.rm = T), 1),
-              q25 = round(quantile(value, .25, na.rm = T), 1),
-              q75 = round(quantile(value, .75, na.rm = T), 1))
+    summarize(round_val = ifelse(var=="Weekly cases per 100K", 0, 1)[1],
+              n = sum(!is.na(value)), mean = round(mean(value, na.rm = T), round_val[1]),
+              median = round(median(value, na.rm = T), round_val[1]),
+              q25 = round(quantile(value, .25, na.rm = T), round_val[1]),
+              q75 = round(quantile(value, .75, na.rm = T), round_val[1]))
   
   # mortality 21-days later by epoch
   k2 = d_out %>% mutate(epoch = case_when(`Start date`<"2021-10-01"~"Per 1", 

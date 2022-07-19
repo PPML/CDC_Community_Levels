@@ -53,13 +53,70 @@ d_out_pre = dg %>% group_by(label, state) %>% mutate(deaths_weekly = deaths_21_l
                                         admits_weekly = admits_confirmed_100K*7,
                                         cases_weekly = round(cases_avg_per_100k*7),
                                         perc_covid_100 = perc_covid*100,
-                                        deaths_weekly = ifelse(ymd>="2022-05-15", NA, deaths_weekly)) 
+                                        deaths_weekly = ifelse(ymd>="2022-05-15", NA, deaths_weekly)) %>%
+  arrange(ymd) %>% group_by(fips, label) %>%
+  mutate(zeke_time_0 = deaths_avg_per_100k*7 > .9,
+         zeke_time_1 = lead(deaths_avg_per_100k*7, 1) > .9,
+         zeke_time_2 = lead(deaths_avg_per_100k*7, 2) > .9,
+         zeke_time_3 = lead(deaths_avg_per_100k*7, 3) > .9,
+         chk = lead(deaths_avg_per_100k*7, 3),
+         zeke_time_4 = lead(deaths_avg_per_100k*7, 4) > .9,
+         zeke_time_5 = lead(deaths_avg_per_100k*7, 5) > .9,
+         zeke_time_6 = lead(deaths_avg_per_100k*7, 6) > .9,
+         zeke_time_7 = lead(deaths_avg_per_100k*7, 7) > .9,
+         zeke_time_8 = lead(deaths_avg_per_100k*7, 8) > .9,
+         zeke_time_9 = lead(deaths_avg_per_100k*7, 9) > .9,
+         zeke_time_10 = lead(deaths_avg_per_100k*7, 10) > .9,
+         zeke_time_11 = lead(deaths_avg_per_100k*7, 11) > .9,
+         zeke_time_12 = lead(deaths_avg_per_100k*7, 12)> .9,
+         zeke_lt_eq3 = (zeke_time_0 + zeke_time_1 + zeke_time_2 + zeke_time_3) > 0,
+         zeke_lt_eq6 = (zeke_lt_eq3 + zeke_time_4 + zeke_time_5 + zeke_time_6) > 0,
+         time_to_zeke = 15,
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_0, 0, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_1, 1, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_2, 2, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_3, 3, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_4, 4, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_5, 5, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_6, 6, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_7, 7, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_8, 8, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_9, 9, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_10, 10, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_11, 11, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_12, 12, time_to_zeke)
+  )
+
+save(d_out_pre, file = here("0 - Data", "county_time_data.RData"))
+
+
+## sensitivity and specificty
+ss = d_out_pre %>% ungroup() %>%
+  gather(var, value, cdc_flag, alt_flag1, alt_flag2) %>%
+  group_by(var) %>%
+  summarize(sens_0 = round(sum(zeke_time_0 & value, na.rm = T)/sum(zeke_time_0 & !is.na(value), na.rm = T), 2),
+            sens_3 = round(sum(zeke_time_3 & value, na.rm = T)/sum(zeke_time_3 & !is.na(value), na.rm = T), 2),
+            sens_6 = round(sum(zeke_time_6 & value, na.rm = T)/sum(zeke_time_6 & !is.na(value), na.rm = T), 2),
+            spec_0 = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!zeke_time_0 & !is.na(value), na.rm = T), 2),
+            spec_3 = round(sum(!zeke_time_3 & !value, na.rm = T)/sum(!zeke_time_3 & !is.na(value), na.rm = T), 2),
+            spec_6 = round(sum(!zeke_time_6 & !value, na.rm = T)/sum(!zeke_time_6 & !is.na(value), na.rm = T), 2),
+            ppv_0 = round(sum(zeke_time_0 & value, na.rm = T)/sum(value & !is.na(zeke_time_0), na.rm = T), 2),
+            ppv_3 = round(sum(zeke_time_3 & value, na.rm = T)/sum(value & !is.na(zeke_time_3), na.rm = T), 2),
+            ppv_6 = round(sum(zeke_time_6 & value, na.rm = T)/sum(value & !is.na(zeke_time_6), na.rm = T), 2),
+            npv_0 = round(sum(!zeke_time_0 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_0), na.rm = T), 2),
+            npv_3 = round(sum(!zeke_time_3 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_3), na.rm = T), 2),
+            npv_6 = round(sum(!zeke_time_6 & !value, na.rm = T)/sum(!value & !is.na(zeke_time_6), na.rm = T), 2))
+
+write.csv(ss, file = here("3 - Supplement", "sens_spec_counties.csv"))
 
 d_out = d_out_pre %>%
   gather(trigger, ind, trigger_on2, trigger_off2) %>%
   filter(ind==TRUE) %>% dplyr::select(-ind) %>%
   mutate(type = ifelse(trigger=="trigger_on2", "Start", "End")) %>%
   dplyr::select(ymd, fips, state, cases_weekly, admits_weekly, POPESTIMATE2019, perc_covid_100, deaths_weekly, type)
+
+# table value
+table(d_out$deaths_weekly[d_out$type=="Start"]>=.9)
 
 d_out_alt1 = d_out_pre %>%
   gather(trigger, ind, trigger_on3, trigger_off3) %>%
@@ -87,11 +144,11 @@ summ_stats = function(d_out, filename = "table1_counties.csv"){
                                         "deaths_weekly")),
            type = factor(type, levels = c("Start", "End"))) %>%
     group_by(type, var) %>%
-    summarize(n = sum(!is.na(value)),
-              mean = round(mean(value, na.rm = T),1),
-              median = round(median(value, na.rm = T), 1),
-              q25 = round(quantile(value, .25, na.rm = T), 1),
-              q75 = round(quantile(value, .75, na.rm = T), 1))
+    summarize(round_val = ifelse(var=="cases_weekly", 0, 1)[1],
+              n = sum(!is.na(value)), mean = round(mean(value, na.rm = T), round_val[1]),
+              median = round(median(value, na.rm = T), round_val[1]),
+              q25 = round(quantile(value, .25, na.rm = T), round_val[1]),
+              q75 = round(quantile(value, .75, na.rm = T), round_val[1]))
   
   # mortality 21-days later by epoch
   k4 = d_out %>% mutate(epoch = case_when(ymd<"2021-10-01"~"Per 1", 

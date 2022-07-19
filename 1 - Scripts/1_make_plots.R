@@ -127,41 +127,45 @@ d_out_pre = dg %>% ungroup() %>% mutate(deaths_weekly = deaths_21_lag_100k*7,
                                     perc_covid_100 = perc_covid*100,
                                     deaths_weekly = ifelse(ymd>="2022-05-15", NA, deaths_weekly)) %>%
   arrange(ymd) %>% group_by(state) %>%
-  mutate(zeke_time_0 = deaths_weekly > .9,
-         zeke_time_1 = lead(deaths_weekly, 1) > .9,
-         zeke_time_2 = lead(deaths_weekly, 2) > .9,
-         zeke_time_3 = lead(deaths_weekly, 3) > .9,
-         zeke_time_4 = lead(deaths_weekly, 4) > .9,
-         zeke_time_5 = lead(deaths_weekly, 5) > .9,
-         zeke_time_6 = lead(deaths_weekly, 6) > .9,
-         zeke_time_7 = lead(deaths_weekly, 7) > .9,
-         zeke_time_8 = lead(deaths_weekly, 8) > .9,
-         zeke_time_9 = lead(deaths_weekly, 9) > .9,
-         zeke_time_10 = lead(deaths_weekly, 10) > .9,
-         zeke_time_11 = lead(deaths_weekly, 11) > .9,
-         zeke_time_12 = lead(deaths_weekly, 12)> .9,
-         zeke_lt_eq3 = (zeke_time_0 + zeke_time_1 + zeke_time_2 + zeke_time_3) > 0,
+  mutate(zeke_time_0 = deaths_avg_per_100k*7 > .9,
+         test_date = lead(ymd, 1),
+         zeke_time_1 = lead(deaths_avg_per_100k*7, 1) > .9,
+         zeke_time_2 = lead(deaths_avg_per_100k*7, 2) > .9,
+         zeke_time_3 = lead(deaths_avg_per_100k*7, 3) > .9,
+         zeke_time_4 = lead(deaths_avg_per_100k*7, 4) > .9,
+         zeke_time_5 = lead(deaths_avg_per_100k*7, 5) > .9,
+         zeke_time_6 = lead(deaths_avg_per_100k*7, 6) > .9,
+         zeke_time_7 = lead(deaths_avg_per_100k*7, 7) > .9,
+         zeke_time_8 = lead(deaths_avg_per_100k*7, 8) > .9,
+         zeke_time_9 = lead(deaths_avg_per_100k*7, 9) > .9,
+         zeke_time_10 = lead(deaths_avg_per_100k*7, 10) > .9,
+         zeke_time_11 = lead(deaths_avg_per_100k*7, 11) > .9,
+         zeke_time_12 = lead(deaths_avg_per_100k*7, 12)> .9,
+         zeke_lt_eq3 = (zeke_time_0 | zeke_time_1 | zeke_time_2 | zeke_time_3),
          zeke_lt_eq6 = (zeke_lt_eq3 + zeke_time_4 + zeke_time_5 + zeke_time_6) > 0,
          time_to_zeke = 15,
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_0, 0, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_1, 1, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_2, 2, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_3, 3, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_4, 4, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_5, 5, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_6, 6, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_7, 7, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_8, 8, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_9, 9, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_10, 10, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_11, 11, time_to_zeke),
-         time_to_zeke = ifelse(time_to_zeke==0 & zeke_time_12, 12, time_to_zeke)
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_0, 0, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_1, 1, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_2, 2, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_3, 3, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_4, 4, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_5, 5, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_6, 6, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_7, 7, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_8, 8, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_9, 9, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_10, 10, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_11, 11, time_to_zeke),
+         time_to_zeke = ifelse(time_to_zeke==15 & zeke_time_12, 12, time_to_zeke)
   )
+
+save(d_out_pre, file = here("0 - Data", "state_time_data.RData"))
 
 d_out = d_out_pre %>% gather(trigger, ind, trigger_on2, trigger_off2) %>%
   filter(ind==TRUE) %>% 
   mutate(type = ifelse(grepl("trigger_on", trigger), "Start", "End")) %>% dplyr::select(-ind) %>%
-  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, type, max, check_bound, check_bound2, type) %>%
+  dplyr::select(ymd, state, time, cases_weekly, admits_weekly, perc_covid_100, deaths_weekly, type, max, check_bound, check_bound2, type,
+                zeke_time_0, zeke_lt_eq3, zeke_lt_eq6, time_to_zeke) %>%
   rename("Start date" = 1, "State" = 2, "Duration of 'high' episode (weeks)" = 3, "Weekly cases per 100K" = 4,
          "Weekly hospital admissions per 100K" = 5, "Percentage of inpatient beds occupied by COVID-19 patients" = 6,
          "Weekly deaths per 100K 21 days after start" = 7, "type" = 8)

@@ -132,7 +132,9 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
     
   # fix MD as needed
   cases_avg_per_100k = ifelse(is.na(Statewide), cases_avg_per_100k, Statewide),
-    
+  cases_avg_per_100k_07d_ago = lag(cases_avg_per_100k),
+  cases_avg_per_100k_chg_week = cases_avg_per_100k-cases_avg_per_100k_07d_ago,
+  
   # remove NAs from bed percentages
   perc_covid = ifelse(is.na(perc_covid), 0, perc_covid),
   
@@ -155,6 +157,7 @@ df = read.csv(here("0 - Data", "us-states.csv")) %>%
   deaths_07_days_ago = lag(deaths_avg, 7), 
   
   # lagged deaths per 100k
+  deaths_07_lag_100k = lead(deaths_avg_per_100k, 7), 
   deaths_12_lag_100k = lead(deaths_avg_per_100k, 12), 
   deaths_13_lag_100k = lead(deaths_avg_per_100k, 13), 
   deaths_14_lag_100k = lead(deaths_avg_per_100k, 14), 

@@ -130,6 +130,7 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
     
   # remove NAs from bed percentages
   perc_covid = ifelse(is.na(perc_covid), 0, perc_covid),
+  admits_confirmed_100K = ifelse(is.na(admits_confirmed_100K), 0, admits_confirmed_100K),
   
   # define CDC "high"
   cdc_flag_1 = (cases_avg_per_100k > 200/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)),  # over 200/100K 7-d
@@ -147,7 +148,7 @@ df = read.csv(here("0 - Data", "us-counties-2021.csv")) %>%
   cdc_flag_1000_high = (cases_avg_per_100k > 1000/7 & (admits_confirmed_100K > 20/7 | perc_covid > .15)),  # over 200/100K 7-d
   
   alt_flag1 = admits_confirmed_100K > 5/7 | perc_covid > .05,
-  alt_flag2 = (cases_avg_per_100k > 100/7 & (admits_confirmed_100K > 10/7 | perc_covid > .1)), 
+  alt_flag2 = (cases_avg_per_100k > 100/7 | (admits_confirmed_100K > 10/7 | perc_covid > .1)), 
   
   cdc_flag_inc_susp = (cases_avg_per_100k > 200/7 & (admits_100K > 10/7 | perc_covid > .1)) |
     (cases_avg_per_100k < 200/7 & (admits_100K > 20/7 | perc_covid > .15)),
