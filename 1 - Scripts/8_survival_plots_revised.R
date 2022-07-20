@@ -36,7 +36,7 @@ make_plots = function(df2, title2 = ""){
                  font.title = 12, 
                  legend.labs = c("CDC High", "Alternative metric 1", "Alternative metric 2"))$plot + 
     geom_vline(xintercept = 3, lty = 2, col = "darkgrey") + 
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5)) + ylim(0,1)
   a
   
   return(a)
